@@ -36,10 +36,10 @@ class S3Interface:
             self._current_bucket, self._current_path = self._parse_bucket(value)
 
     @contextmanager
-    def open(self, path: str, mode: Optional[str] = None):
+    def open(self, file: str, mode: Optional[str] = None):
         """Open a file from s3 and return the S3Interface object"""
         self._mode = mode
-        self.path = path
+        self.path = file
         try:
             yield self
         finally:
@@ -58,7 +58,7 @@ class S3Interface:
             except UnicodeDecodeError:
                 raise ValueError(f"The content cannot be decoded into a string"
                                  f" with encoding {self._encoding}."
-                                 f" Exclude 'b' from read mode to return the original bytes")
+                                 f" Include 'b' on read mode to return the original bytes")
         return res
 
     def write(self, content: Union[str, bytes, io.IOBase], metadata: Optional[dict] = None):
@@ -92,9 +92,15 @@ class S3Interface:
 
 
 if __name__ == '__main__':
-    file_path = 's3://test-cloudstorageio/output.jpg'
+    file_path = 's3://test-cloudstorageio/sample.jpg'
     s3 = S3Interface()
-    local_f = open("/home/vahagn/dev/workspace/cognaize/cloudstorageio/cloudstorageio/tests/resources/sample.jpg", 'rb')
-    with s3.open(file_path, 'w') as f:
-        result = f.write(local_f)
-    local_f.close()
+
+    with s3.open(file_path, 'rb') as f:
+        res = f.read()
+    print(res)
+    # Test write
+    # local_f = "/home/vahagn/dev/workspace/cognaize/cloudstorageio/cloudstorageio/tests/resources/Moon.jpg"
+    # with open(local_f, 'rb') as local_f:
+    #     ct = local_f.read()
+    #     with s3.open(file_path, 'wb') as f:
+    #         result = f.write(ct)

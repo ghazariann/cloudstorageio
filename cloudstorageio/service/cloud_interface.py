@@ -2,14 +2,13 @@ import os
 from contextlib import contextmanager
 from cloudstorageio.service.google_storage_interface import GoogleStorageInterface
 from cloudstorageio.service.s3_interface import S3Interface
-
+from cloudstorageio.service.local_storage_interface import LocalStorageInterface
 
 class CloudInterface:
-    def __init__(self, path, aws_configs=None, google_configs=None):
-        #if aws_configs:
-        self.s3_interface = S3Interface(configs=aws_configs, path=path)
-        if google_configs:
-            self.gs_interface = GoogleStorageInterface(configs=google_configs)
+
+    def __init__(self):
+        self._filename = None
+        self._mode = None
 
     @staticmethod
     def is_local_path(path: str) -> bool:
@@ -23,37 +22,37 @@ class CloudInterface:
 
     @staticmethod
     def is_google_storage_path(path: str) -> bool:
-        if path.startswith(GoogleStorageInterface.prefix):
+        if path.startswith(GoogleStorageInterface.PREFIX):
             return True
         return False
 
-    @contextmanager
-    def open(self, path: str):
-        if self.is_local_path(path):
-            try:
-                file = open(path)
-                yield file
+    def open(self, filename, mode):
+        self._filename = filename
+        self._mode = mode
 
-            finally:
-                file.close()
+        if self.is_local_path(path=filename):
+            return LocalStorageInterface().open(self._filename, self._mode)
 
-        elif self.is_google_storage_path(path):
-            pass
+        elif self.is_google_storage_path(path=filename):
+            return GoogleStorageInterface().open(self._filename, self._mode)
 
-        elif self.is_s3_path(path):
-            file = self.s3_interface
-            yield file
+        elif self.is_s3_path(path=filename):
+            return S3Interface().open(self._filename, self._mode)
+
+        else:
+            raise FileNotFoundError('No such file or directory: {}'.format(filename))
 
 
-# Test
 if __name__ == "__main__":
-    google_path_example = "gs://file/path"
-    s3_path_example = "s3://account-classification-david/PDF/jj keller.pdf"
+    google_file_path = "gs://test-cloudstorageio/sample-files/sample.txt"
+    s3_file_path = 's3://test-cloudstorageio/sample.txt'
     local_file_path = '/home/vahagn/Documents/aws.csv'
+    sample_local_file_path = '/home/vahagn/Documents/sample.txt'
 
-    ci = CloudInterface(s3_path_example)
+    ci = CloudInterface()
+    with open(sample_local_file_path, 'r') as f:
+        res = f.read()
+    with ci.open(google_file_path, 'w') as f:
+        f.write(res)
 
-    with ci.open(s3_path_example) as f:
-        content = f.read()
-    print(content)
 
