@@ -3,9 +3,9 @@ Tool to handle with storage interface
 
 _Developed and tested on python 3.7+_
 
-##Getting Started
+## Getting Started
 
-###Prerequisites
+### Prerequisites
 * #### S3 Configs  
         pip install awscli --upgrade --user
     
@@ -28,11 +28,11 @@ _Developed and tested on python 3.7+_
    
    [click here](https://www.techcoil.com/blog/how-to-set-environment-variables-for-your-python-application-from-pycharm/) for setting env variables in PyCharm 
 
-###Installations 
+### Installations 
 
 
 `pip install --upgrade google-cloud-storage`
 
 `pip install boto3`
-###Running the tests
+### Running the tests
 cloudstorageio -> service -> s3_interface.py -> main()
