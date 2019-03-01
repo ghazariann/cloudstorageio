@@ -1,14 +1,34 @@
 import os
-from contextlib import contextmanager
 from cloudstorageio.service.google_storage_interface import GoogleStorageInterface
 from cloudstorageio.service.s3_interface import S3Interface
 from cloudstorageio.service.local_storage_interface import LocalStorageInterface
+
 
 class CloudInterface:
 
     def __init__(self):
         self._filename = None
         self._mode = None
+        self._s3 = None
+        self._gs = None
+        self._local = None
+        self._current_storage = None
+
+    def identify_path_type(self, path: str):
+        if self.is_local_path(path):
+            if self._local is None:
+                self._local = LocalStorageInterface()
+            self._current_storage = self._local
+        elif self.is_s3_path(path):
+            if self._s3 is None:
+                self._s3 = S3Interface()
+            self._current_storage = self._s3
+        elif self.is_google_storage_path(path):
+            if self._gs is None:
+                self._gs = GoogleStorageInterface()
+            self._current_storage = self._gs
+        else:
+            raise ValueError(f"`{path}` is invalid")
 
     @staticmethod
     def is_local_path(path: str) -> bool:
@@ -26,33 +46,21 @@ class CloudInterface:
             return True
         return False
 
-    def open(self, filename, mode):
-        self._filename = filename
-        self._mode = mode
-
-        if self.is_local_path(path=filename):
-            return LocalStorageInterface().open(self._filename, self._mode)
-
-        elif self.is_google_storage_path(path=filename):
-            return GoogleStorageInterface().open(self._filename, self._mode)
-
-        elif self.is_s3_path(path=filename):
-            return S3Interface().open(self._filename, self._mode)
-
-        else:
-            raise FileNotFoundError('No such file or directory: {}'.format(filename))
+    def open(self, file, mode='rt', *args, **kwargs):
+        self.identify_path_type(file)
+        return self._current_storage.open(file=file, mode=mode, *args, **kwargs)
 
 
 if __name__ == "__main__":
-    google_file_path = "gs://test-cloudstorageio/sample-files/sample.txt"
-    s3_file_path = 's3://test-cloudstorageio/sample.txt'
+    google_file_path = "gs://test-cloudstorageio/sample-files/sample_1.txt"
+    s3_file_path = 's3://test-cloudstorageio/sample-files/sample_100.txt'
     local_file_path = '/home/vahagn/Documents/aws.csv'
     sample_local_file_path = '/home/vahagn/Documents/sample.txt'
 
     ci = CloudInterface()
-    with open(sample_local_file_path, 'r') as f:
-        res = f.read()
-    with ci.open(google_file_path, 'w') as f:
-        f.write(res)
 
+    with ci.open(s3_file_path, 'w') as f:
+        f.write("sgfddgaesg")
 
+    # with ci.open(google_file_path, 'w') as f:
+    #     f.write(res)

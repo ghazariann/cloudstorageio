@@ -35,7 +35,7 @@ class GoogleStorageInterface:
             self._current_bucket, self._current_path = self._parse_bucket(value)
 
     @contextmanager
-    def open(self, file: str, mode: Optional[str] = None):
+    def open(self, file: str, mode: Optional[str] = None, *args, **kwargs):
         """Open a file from gs and return the GoogleStorageInterface object"""
         self._mode = mode
         self.path = file
@@ -76,7 +76,7 @@ class GoogleStorageInterface:
                                        '+' not in self._mode):
             raise ValueError(f"Mode '{self._mode}' does not allow writing the file")
         self._bucket = self._storage_client.get_bucket(self._current_bucket)
-        blob = self._bucket.get_blob(self._current_path)
+        blob = self._bucket.blob(self._current_path)
         blob.upload_from_string(content)
 
     @staticmethod
@@ -89,8 +89,8 @@ class GoogleStorageInterface:
 
 if __name__ == '__main__':
 
-    local_file_path = '/home/vahagn/Documents/sample.jpg'
-    google_path_example = "gs://test-cloudstorageio/sample-files/sample.jpg"
+    local_file_path = '/home/vahagn/Documents/sample.txt'
+    google_path_example = "gs://test-cloudstorageio/sample-files/sample.txt"
 
     gs = GoogleStorageInterface()
 

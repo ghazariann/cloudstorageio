@@ -36,7 +36,7 @@ class S3Interface:
             self._current_bucket, self._current_path = self._parse_bucket(value)
 
     @contextmanager
-    def open(self, file: str, mode: Optional[str] = None):
+    def open(self, file: str, mode: Optional[str] = None, *args, **kwargs):
         """Open a file from s3 and return the S3Interface object"""
         self._mode = mode
         self.path = file
@@ -92,15 +92,13 @@ class S3Interface:
 
 
 if __name__ == '__main__':
-    file_path = 's3://test-cloudstorageio/sample.jpg'
+    file_path = 's3://test-cloudstorageio/sample3.jpg'
     s3 = S3Interface()
 
     with s3.open(file_path, 'rb') as f:
         res = f.read()
     print(res)
     # Test write
-    # local_f = "/home/vahagn/dev/workspace/cognaize/cloudstorageio/cloudstorageio/tests/resources/Moon.jpg"
-    # with open(local_f, 'rb') as local_f:
-    #     ct = local_f.read()
-    #     with s3.open(file_path, 'wb') as f:
-    #         result = f.write(ct)
+
+    with s3.open(file_path, 'wb') as f:
+        result = f.write('drgsghbsezdthbseg')
