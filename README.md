@@ -34,7 +34,42 @@ _Developed and tested on python 3.7+_
 `pip install --upgrade google-cloud-storage`
 
 `pip install boto3`
-### Running the tests
 
-cloudstorageio -> service -> s3_interface.py -> main()
 
+### Usage 
+ * ##### Write text to Google cloud storage file 
+     ```python
+   from cloudstorageio.service.cloud_interface import CloudInterface
+    
+   google_file_path = "gs://bucket-name/path-to-file/sample-file.txt"
+     
+   ci = CloudInterface()
+    
+   with ci.open(google_file_path, 'w') as f:
+       f.write("Lorem Ipsum is simply dummy text of the printing and typesetting industry. ")
+        
+     ```
+ * ##### Read picture from S3 storage 
+    ```python
+   from cloudstorageio.service.cloud_interface import CloudInterface
+
+   s3_file_path = 's3://bucket-name/path-to-file/sample-pic.jpg'
+   ci = CloudInterface()
+
+   with ci.open(s3_file_path, 'rb') as f:
+        output = f.read()
+   print(output) # Prints binary content of picture 
+    
+    ```
+ * ##### Read text locally 
+     ```python
+   from cloudstorageio.service.cloud_interface import CloudInterface
+    
+   local_file_path = 'path-to-file/sample-text-file.txt'
+   ci = CloudInterface()
+    
+   with ci.open(local_file_path, 'r') as f:
+       output = f.read()
+   print(output) # Prints string content of text file 
+        
+    ```
