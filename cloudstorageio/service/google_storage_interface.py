@@ -99,3 +99,6 @@ if __name__ == '__main__':
         with gs.open(google_path_example, 'w') as f:
             f.write(cont)
     # print(output)
+
+
+

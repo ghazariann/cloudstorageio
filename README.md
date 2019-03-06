@@ -1,41 +1,64 @@
 # cloudstorageio
-Tool to handle with storage interface 
+Tool working with storage interfaces
 
 _Developed and tested on python 3.7+_
 
 ## Getting Started
+These instructions will get you a copy of the project up and running on your local machine for usage purpose.
 
+      
 ### Prerequisites
-* #### S3 Configs  
-        pip install awscli --upgrade --user
+* #### set S3 Configs  
+    ```bash 
+    pip install awscli --upgrade --user 
+    ```
     
     set your aws configs 
-
-        $ aws configure
-        AWS Access Key ID [None]: AKIAIOSFODNN7EXAMPLE
-        AWS Secret Access Key [None]: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
-        Default region name [None]: us-west-2
-        Default output format [None]: json
+    ```bash
+    $ aws configure
+    AWS Access Key ID [None]: AKIAIOSFODNN7EXAMPLE
+    AWS Secret Access Key [None]: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+    Default region name [None]: us-west-2
+    Default output format [None]: json
+     ``` 
    [click here](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/quickstart.html#installation) for more info about configuration and installation 
 
-* #### Cloud Storage Configs 
+* #### set Cloud Storage Configs 
    Provide authentication credentials to your application code by setting the environment variable GOOGLE_APPLICATION_CREDENTIALS.
    Replace [FILE_NAME] with the file of the JSON file that contains your service account key
   
-      GOOGLE_APPLICATION_CREDENTIALS="/home/user/Downloads/[FILE_NAME].json"
+    ```bash 
+   GOOGLE_APPLICATION_CREDENTIALS="/home/user/Downloads/[FILE_NAME].json" 
+    ```
       
    [click here](https://cloud.google.com/storage/docs/reference/libraries) for more info about configuration and installation
    
    [click here](https://www.techcoil.com/blog/how-to-set-environment-variables-for-your-python-application-from-pycharm/) for setting env variables in PyCharm 
 
-### Installations 
+
+### Installing
+A step by step series of examples that tell you how to get a validator in ready
 
 
-`pip install --upgrade google-cloud-storage`
+```bash 
+pip install --upgrade google-cloud-storage boto3`
+```
 
-`pip install boto3`
-
-
+### Packaging
+A step by step series of work that tell you how to make a package of validator
+     
+ ```bash  
+ cd /path/to/folder/cloudstorageio
+ # This will create dist/cloudstorageio-<version>-py3-*.whl
+ python3 setup.py sdist bdist_wheel
+ ```
+ ```bash
+ # Uninstall previous version if it's exist
+ pip3 uninstall cloudstorageio-<version>-py3-*.whl
+ # and this will install the package/tool in your computer
+ pip3 install cloudstorageio-<version>-py3-*.whl
+ ```
+ 
 ### Usage 
  * ##### Write text to Google cloud storage file 
      ```python
@@ -61,6 +84,7 @@ _Developed and tested on python 3.7+_
    print(output) # Prints binary content of picture 
     
     ```
+
  * ##### Read text locally 
      ```python
    from cloudstorageio.service.cloud_interface import CloudInterface
