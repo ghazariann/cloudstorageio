@@ -1,3 +1,15 @@
+""" Class CloudInterface handles with Google Cloud Storage and S3 storage files (combination of GoogleStorageInterface\
+    and S3Interface classes)
+
+    Class CloudInterface has 'open' method, which is similar to python built-in 'open' method with more
+    functionality(handles with s3 and google storage path also)
+
+    See the followings for more information about features used in code:
+        https://www.youtube.com/watch?v=-aKFBoZpiqA&t=596s
+        https://boto3.amazonaws.com/v1/documentation/api/latest/guide/s3-examples.html
+        https://googleapis.github.io/google-cloud-python/latest/storage/
+"""
+
 import os
 from cloudstorageio.service.google_storage_interface import GoogleStorageInterface
 from cloudstorageio.service.s3_interface import S3Interface
@@ -15,6 +27,10 @@ class CloudInterface:
         self._current_storage = None
 
     def identify_path_type(self, path: str):
+        """Identify type of the path and make assignments according to that type
+        :param path: full path of file
+        :return: None
+        """
         if self.is_local_path(path):
             if self._local is None:
                 self._local = LocalStorageInterface()

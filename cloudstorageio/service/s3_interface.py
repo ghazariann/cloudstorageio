@@ -1,3 +1,7 @@
+""" Class S3Interface handles with S3 Storage files
+    S3Interface has 'read' and 'write' methods each of them can be accessed by 'open' method
+"""
+
 import io
 from contextlib import contextmanager
 from typing import Tuple, Optional, Union
@@ -95,10 +99,11 @@ if __name__ == '__main__':
     file_path = 's3://test-cloudstorageio/sample3.jpg'
     s3 = S3Interface()
 
+    # Test read
     with s3.open(file_path, 'rb') as f:
-        res = f.read()
-    print(res)
-    # Test write
+        result = f.read()
+    print(result)
 
+    # Test write
     with s3.open(file_path, 'wb') as f:
         result = f.write('drgsghbsezdthbseg')
