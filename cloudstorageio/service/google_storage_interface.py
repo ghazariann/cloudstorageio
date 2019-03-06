@@ -1,3 +1,8 @@
+""" Class GoogleStorageInterface handles with Google Cloud Storage files
+
+    Class GoogleStorageInterface has 'read' and 'write' methods each of them can be accessed by 'open' method
+"""
+
 import io
 from contextlib import contextmanager
 from typing import Tuple, Union, Optional
@@ -64,7 +69,6 @@ class GoogleStorageInterface:
     def write(self, content: Union[str, bytes, io.IOBase]):
         """ Write text to a file on google storage
         :param content: The content that should be written to a file
-        :param metadata:
         :return: String content of the file specified in the filepath argument
         """
         if isinstance(content, str):
@@ -99,6 +103,3 @@ if __name__ == '__main__':
         with gs.open(google_path_example, 'w') as f:
             f.write(cont)
     # print(output)
-
-
-

@@ -1,5 +1,5 @@
 # cloudstorageio
-Tool working with storage interfaces
+Tool working with S3 and Google Storage interfaces
 
 _Developed and tested on python 3.7+_
 
@@ -8,6 +8,10 @@ These instructions will get you a copy of the project up and running on your loc
 
       
 ### Prerequisites
+```bash
+sudo apt install python3.6
+sudo apt install python3-pip
+```
 * #### set S3 Configs  
     ```bash 
     pip install awscli --upgrade --user 
@@ -38,8 +42,6 @@ These instructions will get you a copy of the project up and running on your loc
 
 ### Installing
 A step by step series of examples that tell you how to get a validator in ready
-
-
 ```bash 
 pip install --upgrade google-cloud-storage boto3`
 ```
@@ -54,9 +56,9 @@ A step by step series of work that tell you how to make a package of validator
  ```
  ```bash
  # Uninstall previous version if it's exist
- pip3 uninstall cloudstorageio-<version>-py3-*.whl
+ pip3 uninstall cloudstorageio-<version>-py3-none-any.whl
  # and this will install the package/tool in your computer
- pip3 install cloudstorageio-<version>-py3-*.whl
+ pip3 install dist/cloudstorageio-<version>-py3-none-any.whl
  ```
  
 ### Usage 

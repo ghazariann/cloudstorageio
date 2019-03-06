@@ -35,12 +35,6 @@ setup(
     url="https://github.com/VahagnGhaz/cloudstorageio",
     packages=find_packages(exclude=['contrib', 'docs', 'tests', 'venv']),
     classifiers=[
-        # How mature is this project? Common values are
-        #   3 - Alpha
-        #   4 - Beta
-        #   5 - Production/Stable
-        'Development Status :: 4 - Production/Stable',
-
         # Indicate who your project is intended for
         'Intended Audience :: Developers',
         'Topic :: Software Development :: Build Tools',

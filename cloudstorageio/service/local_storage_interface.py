@@ -1,3 +1,9 @@
+""" Class LocalStorageInterface handles with local files
+
+    Class LocalStorageInterface  has open method, which is similar to python biult-in 'open' method
+"""
+
+
 class LocalStorageInterface:
 
     @staticmethod
@@ -10,6 +16,6 @@ if __name__ == "__main__":
 
     ci = LocalStorageInterface()
 
-    with ci.open(local_file_path) as f:
+    with ci.open(local_file_path, 'r') as f:
         content = f.read()
     print(content)
