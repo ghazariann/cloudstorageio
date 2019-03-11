@@ -5,7 +5,7 @@
     functionality(handles with s3 and google storage path also)
 
     See the followings for more information about features used in code:
-        https://www.youtube.com/watch?v=-aKFBoZpiqA&t=596s
+        https://www.youtube.com/watch?v=-aKFBoZpiqA&t=596sP
         https://boto3.amazonaws.com/v1/documentation/api/latest/guide/s3-examples.html
         https://googleapis.github.io/google-cloud-python/latest/storage/
 """
@@ -69,14 +69,14 @@ class CloudInterface:
 
 if __name__ == "__main__":
     google_file_path = "gs://test-cloudstorageio/sample-files/sample_1.txt"
-    s3_file_path = 's3://test-cloudstorageio/sample-files/sample_100.txt'
+    s3_file_path = 's3://test-cloudstorageio/sample.txt'
     local_file_path = '/home/vahagn/Documents/aws.csv'
     sample_local_file_path = '/home/vahagn/Documents/sample.txt'
 
     ci = CloudInterface()
 
-    with ci.open(s3_file_path, 'w') as f:
-        f.write("sgfddgaesg")
-
+    with ci.open(s3_file_path, 'r') as f:
+        a = f.read()
+    print(a)
     # with ci.open(google_file_path, 'w') as f:
     #     f.write(res)
