@@ -91,19 +91,3 @@ class S3Interface:
         bucket_name, path = path.split('/', 1)
         return bucket_name, path
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.path = None
-
-
-if __name__ == '__main__':
-    file_path = 's3://test-cloudstorageio/sample3.jpg'
-    s3 = S3Interface()
-
-    # Test read
-    with s3.open(file_path, 'rb') as f:
-        result = f.read()
-    print(result)
-
-    # Test write
-    with s3.open(file_path, 'wb') as f:
-        result = f.write('drgsghbsezdthbseg')

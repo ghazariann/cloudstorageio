@@ -39,5 +39,3 @@ class TestS3Interface(unittest.TestCase):
         with self.s3.open(self.new_binary_file, 'rb') as f:
             res = f.read()
         self.assertIsInstance(res, bytes)
-
-
