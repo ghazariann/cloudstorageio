@@ -89,17 +89,3 @@ class GoogleStorageInterface:
         path = path.split(GoogleStorageInterface.PREFIX, 1)[-1]
         bucket_name, path = path.split('/', 1)
         return bucket_name, path
-
-
-if __name__ == '__main__':
-
-    local_file_path = '/home/vahagn/Documents/sample.txt'
-    google_path_example = "gs://test-cloudstorageio/sample-files/sample.txt"
-
-    gs = GoogleStorageInterface()
-
-    with open(local_file_path, 'rb') as local_f:
-        cont = local_f.read()
-        with gs.open(google_path_example, 'w') as f:
-            f.write(cont)
-    # print(output)

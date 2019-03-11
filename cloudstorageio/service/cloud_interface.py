@@ -65,18 +65,3 @@ class CloudInterface:
     def open(self, file, mode='rt', *args, **kwargs):
         self.identify_path_type(file)
         return self._current_storage.open(file=file, mode=mode, *args, **kwargs)
-
-
-if __name__ == "__main__":
-    google_file_path = "gs://test-cloudstorageio/sample-files/sample_1.txt"
-    s3_file_path = 's3://test-cloudstorageio/sample.txt'
-    local_file_path = '/home/vahagn/Documents/aws.csv'
-    sample_local_file_path = '/home/vahagn/Documents/sample.txt'
-
-    ci = CloudInterface()
-
-    with ci.open(s3_file_path, 'r') as f:
-        a = f.read()
-    print(a)
-    # with ci.open(google_file_path, 'w') as f:
-    #     f.write(res)

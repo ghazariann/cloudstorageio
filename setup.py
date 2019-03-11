@@ -2,31 +2,21 @@
 See:
 https://packaging.python.org/tutorials/packaging-projects/
 """
-import os
 
 from codecs import open
+
 from setuptools import setup, find_packages
 
-# Detect version
-here = os.path.abspath(os.path.dirname(__file__))
-module_path = os.path.join(here, 'cloudstorageio', '__init__.py')
-version_line = [line for line in open(module_path)
-                if line.startswith('__version__')][0]
-
-__version__ = version_line.split('__version__ = ')[-1][1:][:-2]
+from cloudstorageio import __name__ as package_name
+from cloudstorageio import __version__ as package_version
 
 # Get the long description from the README file
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-# Get all installed packages from requirements.txt
-with open('/home/vahagn/dev/workspace/cognaize/cloudstorageio/requirements.txt', 'r') as f:
-    requirements = f.read().splitlines()
-
-
 setup(
-    name="cloudstorageio",
-    version=__version__,
+    name=package_name,
+    version=package_version,
     author="Vahagn Ghazaryan",
     author_email="vahagn.ghazayan@gmail.com",
     description="Tool working with storage interfaces",
@@ -43,6 +33,5 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    install_requires=requirements
+    install_requires=['boto3', 'google-cloud-storage'],
 )
-
