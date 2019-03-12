@@ -17,21 +17,25 @@ class TestS3Interface(unittest.TestCase):
         self.local_pic = os.path.join(self.local_test_folder, 'Moon.jpg')
 
     def test_read(self):
+        # Reading binary file with context manager
         with self.s3.open(self.binary_file, 'rb') as f:
             res = f.read()
         self.assertIsInstance(res, bytes)
 
-        with self.s3.open(self.text_file, 'r') as f:
-            res = f.read()
+        # Reading text file without 'with' statement
+        self.s3.open(self.text_file, 'r')
+        res = f.read()
         self.assertIsInstance(res, str)
 
     def test_write(self):
+        # Writing text file without context manager
         with self.s3.open(self.text_file) as f:
             f.write('lorem ipsum')
         with self.s3.open(self.text_file, 'r') as f:
             output = f.read()
         self.assertEqual(output, self.sample_text)
 
+        # Writing binary file with context manager
         with open(self.local_pic, 'rb') as f:
             output = f.read()
         with self.s3.open(self.new_binary_file, 'w') as f:
@@ -39,3 +43,6 @@ class TestS3Interface(unittest.TestCase):
         with self.s3.open(self.new_binary_file, 'rb') as f:
             res = f.read()
         self.assertIsInstance(res, bytes)
+
+    def tearDown(self):
+        pass
