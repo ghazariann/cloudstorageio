@@ -19,7 +19,7 @@ setup(
     version=package_version,
     author="Vahagn Ghazaryan",
     author_email="vahagn.ghazayan@gmail.com",
-    description="Tool working with storage interfaces",
+    description="Cloud storage IO for humans",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/VahagnGhaz/cloudstorageio",
@@ -27,8 +27,7 @@ setup(
     classifiers=[
         # Indicate who your project is intended for
         'Intended Audience :: Developers',
-        'Topic :: Software Development :: Build Tools',
-
+        'Topic :: Software Development :: Libraries :: Python Modules',
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",

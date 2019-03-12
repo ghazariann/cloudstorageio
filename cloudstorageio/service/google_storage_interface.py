@@ -4,7 +4,6 @@
 """
 
 import io
-from contextlib import contextmanager
 from typing import Tuple, Union, Optional
 
 from google.cloud import storage
@@ -22,6 +21,7 @@ class GoogleStorageInterface:
         self._bucket = None
         self._blob = None
         self.path = None
+        self._is_open = False
 
     @property
     def path(self):
@@ -39,15 +39,11 @@ class GoogleStorageInterface:
         else:
             self._current_bucket, self._current_path = self._parse_bucket(value)
 
-    @contextmanager
     def open(self, file: str, mode: Optional[str] = None, *args, **kwargs):
         """Open a file from gs and return the GoogleStorageInterface object"""
         self._mode = mode
         self.path = file
-        try:
-            yield self
-        finally:
-            self.path = None
+        return self
 
     def read(self) -> Union[str, bytes]:
         """ Read gs file and return the bytes
@@ -89,3 +85,11 @@ class GoogleStorageInterface:
         path = path.split(GoogleStorageInterface.PREFIX, 1)[-1]
         bucket_name, path = path.split('/', 1)
         return bucket_name, path
+
+    def __enter__(self):
+        self._is_open = True
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self._is_open = False
+        self.path = None

@@ -15,3 +15,4 @@ A step by step series of work that tell you how to make a package of validator
  ```
  
 [click here](https://packaging.python.org/tutorials/packaging-projects/) for more info about python packaging
+[click here](https://www.techcoil.com/blog/how-to-set-environment-variables-for-your-python-application-from-pycharm/) for setting env variables in PyCharm 
