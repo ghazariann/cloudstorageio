@@ -3,6 +3,10 @@ Cloud storage IO for humans
 
 _Developed and tested on python 3.7+_
 
+[GitHub](https://github.com/VahagnGhaz/cloudstorageio)
+
+[PyPi](https://pypi.org/project/cloudstorageio)
+
 ## Getting Started
 These instructions will get you a copy of the project up and running on your local machine.
 
