@@ -15,7 +15,6 @@ sudo apt install python3-pip
     ```bash 
     pip install awscli --upgrade --user 
     ```
-    
     set your aws configs 
     ```bash
     $ aws configure
@@ -35,13 +34,10 @@ sudo apt install python3-pip
     ```
       
    [click here](https://cloud.google.com/storage/docs/reference/libraries) for more info about configuration and installation
-   
-   [click here](https://www.techcoil.com/blog/how-to-set-environment-variables-for-your-python-application-from-pycharm/) for setting env variables in PyCharm 
-
 
 ### Installation
 ```
-pip install --extra-index-url https://test.pypi.org/simple/ cloudstorageio
+pip install cloudstorageio
 ```
  
 ### Usage 
@@ -60,9 +56,9 @@ with ci.open(google_file_path, 'w') as f:
    
 # Read picture from S3 storage 
 with ci.open(s3_file_path, 'rb') as f:
-    s3_output = f.read() # binary content of picture 
+    s3_output = f.read()  # binary content of picture 
 
 # Read text locally 
 with ci.open(local_file_path, 'r') as f:
-   local_output = f.read() # string content of text file 
+   local_output = f.read()  # string content of text file 
  ```
