@@ -1,8 +1,12 @@
-""" Class CloudInterface handles with Google Cloud Storage and S3 storage files (combination of GoogleStorageInterface\
-    and S3Interface classes)
+""" Class CloudInterface handles with Google Cloud Storage and S3 storage objects(files/folder)
+                                (combination of GoogleStorageInterface and S3Interface classes)
+    All methods are for all 3 environments (s3, google cloud, local)
 
-    Class CloudInterface has 'open' method, which is similar to python built-in 'open' method with more
-    functionality(handles with s3 and google storage path also)
+    Class CloudInterface contains
+                                open method, for opening/creating given file object
+                                isfile and isdir methods for checking object status (file, folder)
+                                listdir method for listing folder's content
+                                remove method for removing file/folder
 
     See the followings for more information about features used in code:
         https://www.youtube.com/watch?v=-aKFBoZpiqA&t=596sP
@@ -27,7 +31,7 @@ class CloudInterface:
         self._current_storage = None
 
     def identify_path_type(self, path: str):
-        """Identify type of the path and make assignments according to that type
+        """Identify type of given path and create class object for that type
         :param path: full path of file
         :return: None
         """
@@ -65,3 +69,23 @@ class CloudInterface:
     def open(self, file, mode='rt', *args, **kwargs):
         self.identify_path_type(file)
         return self._current_storage.open(file=file, mode=mode, *args, **kwargs)
+
+    def isfile(self, path: str):
+        self.identify_path_type(path)
+        return self._current_storage.isfile(path)
+
+    def isdir(self, path: str):
+        self.identify_path_type(path)
+        return self._current_storage.isdir(path)
+
+    def remove(self, path: str):
+        self.identify_path_type(path)
+        return self._current_storage.remove(path)
+
+    def listdir(self, path: str):
+        self.identify_path_type(path)
+        return self._current_storage.listdir(path)
+
+
+if __name__ == '__main__':
+    pass

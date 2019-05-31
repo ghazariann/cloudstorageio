@@ -21,6 +21,10 @@ sudo apt install python3-pip
     ```
     set your aws configs 
     ```bash
+     sudo apt install awscli
+    ```
+    
+    ```bash
     $ aws configure
     AWS Access Key ID [None]: AKIAIOSFODNN7EXAMPLE
     AWS Secret Access Key [None]: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY

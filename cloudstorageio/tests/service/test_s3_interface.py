@@ -23,7 +23,7 @@ class TestS3Interface(unittest.TestCase):
         self.assertIsInstance(res, bytes)
 
         # Reading text file without 'with' statement
-        self.s3.open(self.text_file, 'r')
+        f = self.s3.open(self.text_file, 'r')
         res = f.read()
         self.assertIsInstance(res, str)
 

@@ -112,3 +112,4 @@ venv.bak/
 # Temp folder
 /temp
 /docs
+/loggers
