@@ -1,5 +1,14 @@
 """ Class S3Interface handles with S3 Storage files
-    S3Interface has 'read' and 'write' methods each of them can be accessed by 'open' method
+    S3Interface contains
+                        'read' and 'write' methods each of them can be accessed by 'open' method
+                        isfile and isdir methods for checking object status (file, folder)
+                        listdir method for listing folder's content
+                        remove method for removing file/folder
+
+    Besides boto3 API itself doesn't have any concept of a "folder"
+        in S3Interface you can differentiate file/folder like in local process
+
+
 """
 
 import io
@@ -22,6 +31,11 @@ class S3Interface:
         self._object = None
         self.path = None
         self._is_open = False
+        self._object_exists = None
+        self._isfile = False
+        self._isdir = False
+        self._listdir = list()
+        self._object_exists = False
 
     @property
     def path(self):
@@ -38,19 +52,109 @@ class S3Interface:
             self._current_bucket = None
         else:
             self._current_bucket, self._current_path = self._parse_bucket(value)
+            self._current_path_with_backslash = self._current_path + '/'
+
+    def _differentiate_object(self, object_summary_key: str):
+        """Inner method for detecting given s3.ObjectSummary's status (file or folder)
+        :param object_summary_key: name of object_summary
+        :return:
+        """
+
+        if object_summary_key == self._current_path:
+            self._isfile = True
+        if self._current_path_with_backslash in object_summary_key:
+            self._isdir = True
+
+    def _detect_object_existence(self):
+        """Inner method for finding if given file/folder object exists
+        :return:
+        """
+        for s3_obj_summary in self._object_summary_list:
+            if self._current_path in s3_obj_summary.key:
+                self._object_exists = True
+                break
+
+    def _list_objects(self, object_summary_name):
+        """Inner method for populating self._listdir
+        :param object_summary_name:
+        :return:
+        """
+        split_list = object_summary_name.split(self._current_path_with_backslash)
+        if len(split_list) > 1:
+            inner_object_name_list = split_list[1].split('/')
+
+            if len(inner_object_name_list) > 1:
+                # is dictionary
+                inner_object_name = inner_object_name_list[0] + '/'
+            else:
+                # is file
+                inner_object_name = inner_object_name_list[0]
+
+            if inner_object_name != '' and inner_object_name not in self._listdir:
+                self._listdir.append(inner_object_name)
+
+    def _process(self, path: str):
+        self.path = path
+
+        self._bucket = self._s3.Bucket(self._current_bucket)
+        self._object = self._bucket.Object(self._current_path)
+        self._object_summary_list = list(self._bucket.objects.filter(Prefix=self._current_path))
+
+        self._object_key_list = [obj.key for obj in self._object_summary_list]
+
+        for key_name in self._object_key_list:
+            self._list_objects(key_name)
+            self._differentiate_object(key_name)
+
+        if self._isdir or self._isfile:
+            self._object_exists = True
+
+    def isfile(self, path: str):
+        self._process(path)
+        return self._isfile
+
+    def isdir(self, path: str):
+        self._process(path)
+        return self._isdir
+
+    def listdir(self, path: str):
+        """Check given dictionary status and list all object of its
+        :param path: full path of s3 object (file/folder)
+        :return:
+        """
+        self._process(path)
+        if not self._object_exists:
+            raise FileNotFoundError(f'No such file or dictionary: {path}')
+        elif not self._isdir:
+            raise NotADirectoryError(f"Not a directory: {path}")
+
+        return self._listdir
+
+    def remove(self, path: str):
+        """Check given path status and remove object(s) if found any
+        :param path: full path of s3 object (file/folder)
+        :return:
+        """
+        self._process(path)
+        if not self._object_exists:
+            raise FileNotFoundError(f"Object with path {path} does not exists")
+
+        for obj in self._object_summary_list:
+            obj.delete()
 
     def open(self, file: str, mode: Optional[str] = None, *args, **kwargs):
         """Open a file from s3 and return the S3Interface object"""
         self._mode = mode
-        self.path = file
+        self._process(file)
         return self
 
     def read(self) -> Union[str, bytes]:
         """ Read S3 file and return the bytes
         :return: String content of the file
         """
-        self._bucket = self._s3.Bucket(self._current_bucket)
-        self._object = self._bucket.Object(self._current_path)
+        if not self._isfile:
+            raise FileNotFoundError(' No such file: {}'.format(self.path))
+
         res = self._object.get()['Body'].read()
         if self._mode is not None and 'b' not in self._mode:
             try:
@@ -65,8 +169,10 @@ class S3Interface:
         """ Write text to a file on s3
         :param content: The content that should be written to a file
         :param metadata:
-        :return: String content of the file specified in the filepath argument
+        :return: String content of the file specified in the file path argument
         """
+        if self._isfile:
+            print('Overwriting {} file'.format(self.path))
         if isinstance(content, str):
             content = content.encode('utf8')
         if not metadata:
@@ -76,13 +182,12 @@ class S3Interface:
                                        'x' not in self._mode and
                                        '+' not in self._mode):
             raise ValueError(f"Mode '{self._mode}' does not allow writing the file")
-        self._bucket = self._s3.Bucket(self._current_bucket)
-        self._object = self._bucket.Object(self._current_path)
+
         self._object.put(Body=content, Metadata=metadata)
 
     @staticmethod
     def _parse_bucket(path: str) -> Tuple[str, str]:
-        """Given a path, return the bucket name and the filepath as a tuple"""
+        """Given a path, return the bucket name and the file path as a tuple"""
         path = path.split(S3Interface.PREFIX, 1)[-1]
         bucket_name, path = path.split('/', 1)
         return bucket_name, path
@@ -94,3 +199,14 @@ class S3Interface:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._is_open = False
         self.path = None
+
+
+if __name__ == '__main__':
+    ci = S3Interface()
+    s3_file_path = 's3://test-cloudstorageio/v'
+    # with ci.open(s3_file_path, 'w') as f:
+    #     f.write('ga')
+    print(ci.isdir(s3_file_path))
+    # ci.delete(s3_file_path)
+    # # print(ot)
+    # # ci.listdir(s3_file_path)

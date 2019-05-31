@@ -1,0 +1,3 @@
+[2019-05-30 20:03:25,322] INFO - logging to : "/home/vahagn/dev/workspace/my_projects/cloudstorageio/cloudstorageio/loggers/cloudstorageio_2019-05-30_20-03.loggers" --		/home/vahagn/dev/workspace/my_projects/cloudstorageio/cloudstorageio/utils/logger.py:34
+[2019-05-30 20:03:27,238] INFO - Overwriting s3://test-cloudstorageio/v file --		/home/vahagn/dev/workspace/my_projects/cloudstorageio/cloudstorageio/service/s3_interface.py:150
+[2019-05-30 20:03:42,017] INFO - logging to : "/home/vahagn/dev/workspace/my_projects/cloudstorageio/cloudstorageio/loggers/cloudstorageio_2019-05-30_20-03.loggers" --		/home/vahagn/dev/workspace/my_projects/cloudstorageio/cloudstorageio/utils/logger.py:34
