@@ -31,11 +31,6 @@ class S3Interface:
         self._object = None
         self.path = None
         self._is_open = False
-        self._object_exists = None
-        self._isfile = False
-        self._isdir = False
-        self._listdir = list()
-        self._object_exists = False
 
     @property
     def path(self):
@@ -74,7 +69,7 @@ class S3Interface:
                 self._object_exists = True
                 break
 
-    def _list_objects(self, object_summary_name):
+    def populate_listdir(self, object_summary_name):
         """Inner method for populating self._listdir
         :param object_summary_name:
         :return:
@@ -94,6 +89,16 @@ class S3Interface:
                 self._listdir.append(inner_object_name)
 
     def _process(self, path: str):
+        """From given path create bucket, object, object_summaries, differentiate, list and detect status for object
+        :param path: full path of file/folder
+        :return:
+        """
+
+        self._isfile = False
+        self._isdir = False
+        self._listdir = list()
+        self._object_exists = False
+
         self.path = path
 
         self._bucket = self._s3.Bucket(self._current_bucket)
@@ -103,7 +108,7 @@ class S3Interface:
         self._object_key_list = [obj.key for obj in self._object_summary_list]
 
         for key_name in self._object_key_list:
-            self._list_objects(key_name)
+            self.populate_listdir(key_name)
             self._differentiate_object(key_name)
 
         if self._isdir or self._isfile:
@@ -142,10 +147,10 @@ class S3Interface:
         for obj in self._object_summary_list:
             obj.delete()
 
-    def open(self, file: str, mode: Optional[str] = None, *args, **kwargs):
+    def open(self, path: str, mode: Optional[str] = None, *args, **kwargs):
         """Open a file from s3 and return the S3Interface object"""
         self._mode = mode
-        self._process(file)
+        self._process(path)
         return self
 
     def read(self) -> Union[str, bytes]:
@@ -203,10 +208,10 @@ class S3Interface:
 
 if __name__ == '__main__':
     ci = S3Interface()
-    s3_file_path = 's3://test-cloudstorageio/v'
-    # with ci.open(s3_file_path, 'w') as f:
-    #     f.write('ga')
-    print(ci.isdir(s3_file_path))
+    s3_file_path = 's3://test-cloudstorageio/sample-files/sample.txt'
+    with ci.open(s3_file_path, 'w') as f:
+        f.write('lorem ipsum')
+    # print(ci.isfile('s3://test-cloudstorageio/sample-files'))
     # ci.delete(s3_file_path)
     # # print(ot)
     # # ci.listdir(s3_file_path)
