@@ -23,10 +23,6 @@ class GoogleStorageInterface:
         self._blob = None
         self.path = None
         self._is_open = False
-        self._listdir = list()
-        self._isfile = False
-        self._isdir = False
-        self._object_exists = False
 
     @property
     def path(self):
@@ -55,31 +51,13 @@ class GoogleStorageInterface:
         if self._current_path_with_backslash in blob_name:
             self._isdir = True
 
-    def _process(self, path: str):
-        """From given path create bucket, blob objects, differentiate, list and detect status
-        :param path: full path of file/folder
-        :return:
-        """
-        self.path = path
-        self._bucket = self._storage_client.get_bucket(self._current_bucket)
-        self._blob_objects = list(self._bucket.list_blobs(prefix=self._current_path))
-
-        self._blob_key_names_list = [obj.key for obj in self._blob_objects]
-
-        for blob_name in self._blob_key_names_list:
-            self._differentiate_object(blob_name)
-            self._list_objects(blob_name)
-
-        if self._isdir or self._isfile:
-            self._object_exists = True
-
-    def _list_objects(self, blob):
+    def _populate_listdir(self, blob_name):
         """Append each blob inner name to self._listdir
-        :param blob: storage.blob.Blob object
+        :param blob_name: storage.blob.Blob object
         :return:
         """
 
-        split_list = blob.name.split(self._current_path_with_backslash)
+        split_list = blob_name.split(self._current_path_with_backslash)
         if len(split_list) > 1:
             inner_object_name_list = split_list[1].split('/')
 
@@ -92,6 +70,31 @@ class GoogleStorageInterface:
 
             if inner_object_name != '' and inner_object_name not in self._listdir:
                 self._listdir.append(inner_object_name)
+
+    def _process(self, path: str):
+        """From given path create bucket, blob objects, differentiate, list and detect status
+        :param path: full path of file/folder
+        :return:
+        """
+
+        self._isfile = False
+        self._isdir = False
+        self._listdir = list()
+        self._object_exists = False
+
+        self.path = path
+        self._bucket = self._storage_client.get_bucket(self._current_bucket)
+        self._blob_objects = list(self._bucket.list_blobs(prefix=self._current_path))
+
+        self._blob_key_names_list = [obj.name for obj in self._blob_objects]
+
+        for blob_name in self._blob_key_names_list:
+            self._differentiate_object(blob_name)
+            self._populate_listdir(blob_name)
+
+        if self._isdir or self._isfile:
+            self._object_exists = True
+        self._blob = self._bucket.get_blob(self._current_path)
 
     def isfile(self, path: str):
         self._process(path)
@@ -190,10 +193,12 @@ class GoogleStorageInterface:
 
 if __name__ == '__main__':
     ci = GoogleStorageInterface()
-    gs_file_path = 'gs://test-cloudstorageio/sample-files/node2'
+    gs_file_path = 'gs://test-cloudstorageio/sample.txt'
     # with ci.open(gs_file_path, 'w') as f:
-    #     f.write('ga')
-    print(ci.listdir(gs_file_path))
+    #     ot = f.write('lorem ipsum')
+    print(ci.remove(gs_file_path))
+
+    # print(ci.listdir(gs_file_path))
     # ci.delete(s3_file_path)
     # # print(ot)
     # # ci.listdir(s3_file_path)
