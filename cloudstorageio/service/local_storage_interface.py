@@ -13,8 +13,8 @@ import shutil
 class LocalStorageInterface:
 
     @staticmethod
-    def open(file, mode: str = 'rt', *args, **kwargs):
-        return open(file=file, mode=mode, *args, **kwargs)
+    def open(path, mode: str = 'rt', *args, **kwargs):
+        return open(file=path, mode=mode, *args, **kwargs)
 
     @staticmethod
     def isfile(path: str):
