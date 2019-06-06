@@ -72,8 +72,8 @@ class GoogleStorageInterface:
             if inner_object_name != '' and inner_object_name not in self._listdir:
                 self._listdir.append(inner_object_name)
 
-    def _process(self, path: str):
-        """From given path create bucket, blob objects, differentiate, list and detect type
+    def _analyse_path(self, path: str):
+        """From given path create bucket, blob objects, list and detect object type (file/folder)
         :param path: full path of file/folder
         :return:
         """
@@ -98,21 +98,21 @@ class GoogleStorageInterface:
         self._blob = self._bucket.get_blob(self._current_path)
 
     def isfile(self, path: str):
-        self._process(path)
+        self._analyse_path(path)
         return self._isfile
 
     def isdir(self, path: str):
-        self._process(path)
+        self._analyse_path(path)
         return self._isdir
 
     def listdir(self, path: str):
-        """Check given dictionary's existence and list all object of it
+        """Check given dictionary's existence and list content
         :param path: full path of gs object (file/folder)
         :return:
         :param path:
         :return:
         """
-        self._process(path)
+        self._analyse_path(path)
         if not self._object_exists:
             raise FileNotFoundError(f'No such file or dictionary: {path}')
         elif not self._isdir:
@@ -125,7 +125,7 @@ class GoogleStorageInterface:
         :param path: full path of gs object (file/folder)
         :return:
         """
-        self._process(path)
+        self._analyse_path(path)
         if not self._object_exists:
             raise FileNotFoundError(f'No such file or dictionary: {path}')
 
@@ -135,7 +135,7 @@ class GoogleStorageInterface:
     def open(self, path: str, mode: Optional[str] = None, *args, **kwargs):
         """Open a file from gs and return the GoogleStorageInterface object"""
         self._mode = mode
-        self._process(path)
+        self._analyse_path(path)
         return self
 
     def read(self) -> Union[str, bytes]:
@@ -190,6 +190,3 @@ class GoogleStorageInterface:
         self._is_open = False
         self.path = None
 
-
-if __name__ == '__main__':
-    pass

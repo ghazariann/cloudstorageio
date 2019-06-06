@@ -1,5 +1,5 @@
 # cloudstorageio
-Cloud storage IO for humans
+Storage agnostic IO interface for humans
 
 _Developed and tested on python 3.7+_
 
@@ -10,11 +10,6 @@ _Developed and tested on python 3.7+_
 ## Getting Started
 These instructions will get you a copy of the project up and running on your local machine.
 
-### Prerequisites
-```bash
-sudo apt install python3.6
-sudo apt install python3-pip
-```
 * #### S3 configs  
     ```bash 
     pip install awscli --upgrade --user 
@@ -50,12 +45,13 @@ pip install cloudstorageio
  
 ### Usage 
 
+* Write and read file 
 ```python
 from cloudstorageio import CloudInterface
 
 google_file_path = 'gs://bucket-name/path-to-file/sample-file.txt'
 s3_file_path = 's3://bucket-name/path-to-file/sample-pic.jpg'
-local_file_path = 'path-to-file/sample-text-file.txt'
+
 ci = CloudInterface()
 
 # Write text to Google cloud storage file 
@@ -65,8 +61,20 @@ with ci.open(google_file_path, 'w') as f:
 # Read picture from S3 storage 
 with ci.open(s3_file_path, 'rb') as f:
     s3_output = f.read()  # binary content of picture 
+```
 
-# Read text locally 
-with ci.open(local_file_path, 'r') as f:
-   local_output = f.read()  # string content of text file 
- ```
+* Remove, list, and check folder/file  
+```python
+# List folder content
+from cloudstorageio import CloudInterface
+
+google_folder_path = 'gs://bucket-name/folder'
+s3_file_path = 's3://bucket-name/path-to-file/sample-pic.jpg'
+ci = CloudInterface()
+
+ci.isfile(s3_file_path) # returns True 
+ci.isdir(google_folder_path) # returns True
+ci.remove(s3_file_path) # removes file 
+ci.listdir(google_folder_path) # list folder content 
+
+```
