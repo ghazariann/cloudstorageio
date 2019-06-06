@@ -66,9 +66,9 @@ class CloudInterface:
             return True
         return False
 
-    def open(self, file, mode='rt', *args, **kwargs):
-        self.identify_path_type(file)
-        return self._current_storage.open(path=file, mode=mode, *args, **kwargs)
+    def open(self, file_path, mode='rt', *args, **kwargs):
+        self.identify_path_type(file_path)
+        return self._current_storage.open(path=file_path, mode=mode, *args, **kwargs)
 
     def isfile(self, path: str):
         self.identify_path_type(path)
@@ -86,12 +86,3 @@ class CloudInterface:
         self.identify_path_type(path)
         return self._current_storage.listdir(path)
 
-
-if __name__ == '__main__':
-
-    p = 'gs://test-cloudstorageio/v'
-    ci = CloudInterface()
-    res2 = ci.listdir(p)
-    # with ci.open(p, 'rb') as f:
-    #     ot = f.read()
-    print(res2)

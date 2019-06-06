@@ -9,8 +9,8 @@ log_format = "[%(asctime)s] %(levelname)s - %(message)s --\t\t%(pathname)s:%(lin
 formatter = logging.Formatter(log_format)
 
 # File Handler
-logger_file = "loggers"
-filename = "cloudstorageio_{}.loggers".format(datetime.today().strftime("%Y-%m-%d_%H-%M"))
+logger_file = "log"
+filename = "cloudstorageio_{}.log".format(datetime.today().strftime("%Y-%m-%d_%H-%M"))
 package_dir = os.path.dirname(cloudstorageio.__file__)
 logger_file_dir = os.path.join(package_dir, logger_file)
 file_dir = os.path.abspath(logger_file_dir)

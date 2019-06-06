@@ -16,6 +16,8 @@ from typing import Tuple, Optional, Union
 
 import boto3
 
+from cloudstorageio.utils.logger import logger
+
 
 class S3Interface:
     PREFIX = "s3://"
@@ -49,8 +51,8 @@ class S3Interface:
             self._current_bucket, self._current_path = self._parse_bucket(value)
             self._current_path_with_backslash = self._current_path + '/'
 
-    def _differentiate_object(self, object_summary_key: str):
-        """Inner method for detecting given s3.ObjectSummary's status (file or folder)
+    def _detect_type_of_object_summary(self, object_summary_key: str):
+        """Inner method for detecting given s3.ObjectSummary's type (file or folder)
         :param object_summary_key: name of object_summary
         :return:
         """
@@ -60,25 +62,16 @@ class S3Interface:
         if self._current_path_with_backslash in object_summary_key:
             self._isdir = True
 
-    def _detect_object_existence(self):
-        """Inner method for finding if given file/folder object exists
-        :return:
-        """
-        for s3_obj_summary in self._object_summary_list:
-            if self._current_path in s3_obj_summary.key:
-                self._object_exists = True
-                break
-
-    def populate_listdir(self, object_summary_name):
+    def _populate_listdir(self, object_summary_key: str):
         """Inner method for populating self._listdir
-        :param object_summary_name:
+        :param object_summary_key: name of object summary
         :return:
         """
-        split_list = object_summary_name.split(self._current_path_with_backslash)
-        if len(split_list) > 1:
-            inner_object_name_list = split_list[1].split('/')
+        split_list = object_summary_key.split(self._current_path_with_backslash, 1)
+        if len(split_list) == 2:
+            inner_object_name_list = split_list[-1].split('/', 1)
 
-            if len(inner_object_name_list) > 1:
+            if len(inner_object_name_list) == 1:
                 # is dictionary
                 inner_object_name = inner_object_name_list[0] + '/'
             else:
@@ -108,8 +101,8 @@ class S3Interface:
         self._object_key_list = [obj.key for obj in self._object_summary_list]
 
         for key_name in self._object_key_list:
-            self.populate_listdir(key_name)
-            self._differentiate_object(key_name)
+            self._populate_listdir(key_name)
+            self._detect_type_of_object_summary(key_name)
 
         if self._isdir or self._isfile:
             self._object_exists = True
@@ -123,7 +116,7 @@ class S3Interface:
         return self._isdir
 
     def listdir(self, path: str):
-        """Check given dictionary status and list all object of its
+        """Check given dictionary type and list all object of it
         :param path: full path of s3 object (file/folder)
         :return:
         """
@@ -136,7 +129,7 @@ class S3Interface:
         return self._listdir
 
     def remove(self, path: str):
-        """Check given path status and remove object(s) if found any
+        """Check given path type and remove object(s) if found any
         :param path: full path of s3 object (file/folder)
         :return:
         """
@@ -177,7 +170,7 @@ class S3Interface:
         :return: String content of the file specified in the file path argument
         """
         if self._isfile:
-            print('Overwriting {} file'.format(self.path))
+            logger.info('Overwriting {} file'.format(self.path))
         if isinstance(content, str):
             content = content.encode('utf8')
         if not metadata:
@@ -204,14 +197,3 @@ class S3Interface:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._is_open = False
         self.path = None
-
-
-if __name__ == '__main__':
-    ci = S3Interface()
-    s3_file_path = 's3://test-cloudstorageio/sample-files/sample.txt'
-    with ci.open(s3_file_path, 'w') as f:
-        f.write('lorem ipsum')
-    # print(ci.isfile('s3://test-cloudstorageio/sample-files'))
-    # ci.delete(s3_file_path)
-    # # print(ot)
-    # # ci.listdir(s3_file_path)
