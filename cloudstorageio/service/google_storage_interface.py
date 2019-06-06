@@ -4,10 +4,11 @@
 """
 
 import io
-from pprint import pprint
 from typing import Tuple, Union, Optional
 
 from google.cloud import storage
+
+from cloudstorageio.utils.logger import logger
 
 
 class GoogleStorageInterface:
@@ -41,8 +42,8 @@ class GoogleStorageInterface:
             self._current_bucket, self._current_path = self._parse_bucket(value)
             self._current_path_with_backslash = self._current_path + '/'
 
-    def _differentiate_object(self, blob_name: str):
-        """Inner method for detecting given blob object status (file or folder)
+    def _detect_blob_object_type(self, blob_name: str):
+        """Inner method for detecting given blob object type (file or folder)
         :param blob_name: name of blob object
         :return:
         """
@@ -57,11 +58,11 @@ class GoogleStorageInterface:
         :return:
         """
 
-        split_list = blob_name.split(self._current_path_with_backslash)
-        if len(split_list) > 1:
-            inner_object_name_list = split_list[1].split('/')
+        split_list = blob_name.split(self._current_path_with_backslash, 1)
+        if len(split_list) == 2:
+            inner_object_name_list = split_list[-1].split('/', 1)
 
-            if len(inner_object_name_list) > 1:
+            if len(inner_object_name_list) == 2:
                 # is dictionary
                 inner_object_name = inner_object_name_list[0] + '/'
             else:
@@ -72,7 +73,7 @@ class GoogleStorageInterface:
                 self._listdir.append(inner_object_name)
 
     def _process(self, path: str):
-        """From given path create bucket, blob objects, differentiate, list and detect status
+        """From given path create bucket, blob objects, differentiate, list and detect type
         :param path: full path of file/folder
         :return:
         """
@@ -89,7 +90,7 @@ class GoogleStorageInterface:
         self._blob_key_names_list = [obj.name for obj in self._blob_objects]
 
         for blob_name in self._blob_key_names_list:
-            self._differentiate_object(blob_name)
+            self._detect_blob_object_type(blob_name)
             self._populate_listdir(blob_name)
 
         if self._isdir or self._isfile:
@@ -105,7 +106,7 @@ class GoogleStorageInterface:
         return self._isdir
 
     def listdir(self, path: str):
-        """Check given dictionary status and list all object of its
+        """Check given dictionary's existence and list all object of it
         :param path: full path of gs object (file/folder)
         :return:
         :param path:
@@ -120,7 +121,7 @@ class GoogleStorageInterface:
         return self._listdir
 
     def remove(self, path: str):
-        """Check given path status and remove object(s) if found any
+        """Check given path type and remove object(s) if found any
         :param path: full path of gs object (file/folder)
         :return:
         """
@@ -162,7 +163,7 @@ class GoogleStorageInterface:
         """
 
         if self._isfile:
-            pprint('Overwriting {} file'.format(self.path))
+            logger.info('Overwriting {} file'.format(self.path))
         if isinstance(content, str):
             content = content.encode('utf8')
 
@@ -171,7 +172,6 @@ class GoogleStorageInterface:
                                        'x' not in self._mode and
                                        '+' not in self._mode):
             raise ValueError(f"Mode '{self._mode}' does not allow writing the file")
-        # self._bucket = self._storage_client.get_bucket(self._current_bucket)
         blob = self._bucket.blob(self._current_path)
         blob.upload_from_string(content)
 
@@ -189,16 +189,3 @@ class GoogleStorageInterface:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._is_open = False
         self.path = None
-
-
-if __name__ == '__main__':
-    ci = GoogleStorageInterface()
-    gs_file_path = 'gs://test-cloudstorageio/sample.txt'
-    # with ci.open(gs_file_path, 'w') as f:
-    #     ot = f.write('lorem ipsum')
-    print(ci.remove(gs_file_path))
-
-    # print(ci.listdir(gs_file_path))
-    # ci.delete(s3_file_path)
-    # # print(ot)
-    # # ci.listdir(s3_file_path)
