@@ -46,7 +46,7 @@ class TestGoogleStorageInterface(unittest.TestCase):
     def test_write(self):
         # Writing text file without context manager
         f = self.gs.open(self.text_file)
-        f.write('lorem ipsum')
+        f.write(self.sample_text)
         with self.gs.open(self.text_file, 'r') as f:
             output = f.read()
         self.assertEqual(output, self.sample_text)

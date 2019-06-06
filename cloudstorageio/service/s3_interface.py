@@ -71,7 +71,7 @@ class S3Interface:
         if len(split_list) == 2:
             inner_object_name_list = split_list[-1].split('/', 1)
 
-            if len(inner_object_name_list) == 1:
+            if len(inner_object_name_list) == 2:
                 # is dictionary
                 inner_object_name = inner_object_name_list[0] + '/'
             else:
@@ -197,3 +197,4 @@ class S3Interface:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._is_open = False
         self.path = None
+
