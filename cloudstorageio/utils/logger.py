@@ -31,5 +31,5 @@ logging.basicConfig(format=log_format)
 logger = logging.getLogger('logger_info')
 logger.setLevel(logging.INFO)
 logger.addHandler(file_handler)
-logger.info('logging to : "{}"'.format(log_file_path))
+# logger.info('logging to : "{}"'.format(log_file_path))
 

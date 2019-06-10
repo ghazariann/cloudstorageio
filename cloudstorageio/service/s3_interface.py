@@ -151,7 +151,7 @@ class S3Interface:
         :return: String content of the file
         """
         if not self._isfile:
-            raise FileNotFoundError(' No such file: {}'.format(self.path))
+            raise FileNotFoundError('No such file: {}'.format(self.path))
 
         res = self._object.get()['Body'].read()
         if self._mode is not None and 'b' not in self._mode:

@@ -16,8 +16,8 @@
 
 import os
 from cloudstorageio.service.google_storage_interface import GoogleStorageInterface
-from cloudstorageio.service.s3_interface import S3Interface
 from cloudstorageio.service.local_storage_interface import LocalStorageInterface
+from cloudstorageio.service.s3_interface import S3Interface
 
 
 class CloudInterface:
@@ -52,7 +52,7 @@ class CloudInterface:
 
     @staticmethod
     def is_local_path(path: str) -> bool:
-        return os.path.exists(path)
+        return os.path.exists(path) or os.path.isdir(os.path.dirname(path))
 
     @staticmethod
     def is_s3_path(path: str) -> bool:
