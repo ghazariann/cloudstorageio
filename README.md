@@ -51,7 +51,6 @@ from cloudstorageio import CloudInterface
 
 google_file_path = 'gs://bucket-name/path-to-file/sample-file.txt'
 s3_file_path = 's3://bucket-name/path-to-file/sample-pic.jpg'
-
 ci = CloudInterface()
 
 # Write text to Google cloud storage file 
@@ -65,7 +64,6 @@ with ci.open(s3_file_path, 'rb') as f:
 
 * Remove, list, and check folder/file  
 ```python
-# List folder content
 from cloudstorageio import CloudInterface
 
 google_folder_path = 'gs://bucket-name/folder'
@@ -76,5 +74,14 @@ ci.isfile(s3_file_path) # returns True
 ci.isdir(google_folder_path) # returns True
 ci.remove(s3_file_path) # removes file 
 ci.listdir(google_folder_path) # list folder content 
+```
+* Copy file 
+```python
+from cloudstorageio import CloudInterface
 
+s3_file_path = 's3://bucket-name/path-to-file/sample-pic.jpg'
+google_file_path = 'gs://bucket-name/path-to-file/sample-file.txt'
+ci = CloudInterface()
+
+ci.copy(source=s3_file_path, to=google_file_path) # copies s3 file to google 
 ```

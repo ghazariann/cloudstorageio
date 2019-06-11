@@ -7,6 +7,7 @@
                                 isfile and isdir methods for checking object status (file, folder)
                                 listdir method for listing folder's content
                                 remove method for removing file/folder
+                                copy method for copying file from one storage to another
 
     See the followings for more information about features used in code:
         https://www.youtube.com/watch?v=-aKFBoZpiqA&t=596sP
@@ -86,3 +87,13 @@ class CloudInterface:
         self.identify_path_type(path)
         return self._current_storage.listdir(path)
 
+    def copy(self, source: str, to: str):
+        """ Copy given file to new destination
+        :param source: local or remote storage path of existing file
+        :param to: local or remote storage path of new file
+        :return:
+        """
+        with self.open(source, 'rb') as f:
+            content = f.read()
+        with self.open(to, 'wb') as f:
+            f.write(content)
