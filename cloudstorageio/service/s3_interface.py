@@ -1,13 +1,12 @@
 """ Class S3Interface handles with S3 Storage files
-    S3Interface contains
-                        'read' and 'write' methods each of them can be accessed by 'open' method
+    S3Interface has
+                        'read' and 'write' methods (can be accessed by 'open' method)
                         isfile and isdir methods for checking object status (file, folder)
                         listdir method for listing folder's content
                         remove method for removing file/folder
 
-    Besides boto3 API itself doesn't have any concept of a "folder"
-        in S3Interface you can differentiate file/folder like in local process
-
+    Boto3 API itself doesn't have any concept of a "folder".
+        In S3Interface you can differentiate file/folder like in local env
 
 """
 
@@ -22,9 +21,19 @@ from cloudstorageio.utils.logger import logger
 class S3Interface:
     PREFIX = "s3://"
 
-    def __init__(self):
+    def __init__(self, **kwargs):
+        self._region = kwargs.pop('region_name', None)
+        self._acc_key = kwargs.pop('aws_access_key_id', None)
+        self._acc_secret_key = kwargs.pop('aws_secret_access_key', None)
+
+        if (self._acc_secret_key and not self._acc_key) or (self._acc_key and not self._acc_secret_key):
+            raise ConnectionRefusedError('Please provide both aws_access_key_id and aws_secret_access_key')
+
+        self._session = boto3.session.Session(aws_access_key_id=self._acc_key,
+                                              aws_secret_access_key=self._acc_secret_key,
+                                              region_name=self._region)
+
         self._encoding = 'utf8'
-        self._session = boto3.session.Session()
         self._s3 = self._session.resource('s3')
         self._mode = None
         self._current_bucket = None
@@ -50,6 +59,15 @@ class S3Interface:
         else:
             self._current_bucket, self._current_path = self._parse_bucket(value)
             self._current_path_with_backslash = self._current_path + '/'
+
+    @staticmethod
+    def get_bucket_region(bucket_name):
+        """
+        Get region name of specific bucket
+        :param bucket_name: name of s3 bucket object
+        :return:
+        """
+        return boto3.client('s3').get_bucket_location(Bucket=bucket_name)['LocationConstraint']
 
     def _detect_type_of_object_summary(self, object_summary_key: str):
         """Inner method for detecting given s3.ObjectSummary's type (file or folder)
@@ -163,10 +181,13 @@ class S3Interface:
                                  f" Include 'b' on read mode to return the original bytes")
         return res
 
-    def write(self, content: Union[str, bytes, io.IOBase], metadata: Optional[dict] = None):
+    def write(self, content: Union[str, bytes, io.IOBase], metadata: Optional[dict] = None,
+              acl: Optional[str] = 'private'):
+
         """ Write text to a file on s3
         :param content: The content that should be written to a file
         :param metadata:
+        :param acl: access control permission for written file ('private' by default)
         :return: String content of the file specified in the file path argument
         """
         if self._isfile:
@@ -181,7 +202,7 @@ class S3Interface:
                                        '+' not in self._mode):
             raise ValueError(f"Mode '{self._mode}' does not allow writing the file")
 
-        self._object.put(Body=content, Metadata=metadata)
+        self._object.put(ACL=acl, Body=content, Metadata=metadata)
 
     @staticmethod
     def _parse_bucket(path: str) -> Tuple[str, str]:

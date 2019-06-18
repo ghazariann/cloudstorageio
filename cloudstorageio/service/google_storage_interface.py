@@ -14,7 +14,7 @@ from cloudstorageio.utils.logger import logger
 class GoogleStorageInterface:
     PREFIX = "gs://"
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         self._encoding = 'utf8'
         self._storage_client = storage.Client()
         self._mode = None

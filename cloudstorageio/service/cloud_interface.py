@@ -20,33 +20,45 @@ from cloudstorageio.service.google_storage_interface import GoogleStorageInterfa
 from cloudstorageio.service.local_storage_interface import LocalStorageInterface
 from cloudstorageio.service.s3_interface import S3Interface
 
+from typing import Optional
+
 
 class CloudInterface:
 
-    def __init__(self):
+    def __init__(self, region_name: Optional[str] = None, aws_access_key_id: Optional[str] = None,
+                 aws_secret_access_key: Optional[str] = None, **kwargs):
+
+        self._kwargs = kwargs
+        self._kwargs['region_name'] = region_name
+        self._kwargs['aws_access_key_id'] = aws_access_key_id
+        self._kwargs['aws_secret_access_key'] = aws_secret_access_key
+
         self._filename = None
         self._mode = None
         self._s3 = None
         self._gs = None
         self._local = None
         self._current_storage = None
+        self._path = None
 
     def identify_path_type(self, path: str):
         """Identify type of given path and create class object for that type
         :param path: full path of file
         :return: None
         """
-        if self.is_local_path(path):
+        self._path = path.strip()
+
+        if self.is_local_path(self._path):
             if self._local is None:
                 self._local = LocalStorageInterface()
             self._current_storage = self._local
-        elif self.is_s3_path(path):
+        elif self.is_s3_path(self._path):
             if self._s3 is None:
-                self._s3 = S3Interface()
+                self._s3 = S3Interface(**self._kwargs)
             self._current_storage = self._s3
-        elif self.is_google_storage_path(path):
+        elif self.is_google_storage_path(self._path):
             if self._gs is None:
-                self._gs = GoogleStorageInterface()
+                self._gs = GoogleStorageInterface(**self._kwargs)
             self._current_storage = self._gs
         else:
             raise ValueError(f"`{path}` is invalid")

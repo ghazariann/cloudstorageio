@@ -19,6 +19,7 @@ class TestS3Interface(unittest.TestCase):
 
         # folder and file with the same name
         self.file_and_folder = 's3://test-cloudstorageio/v'
+
         self.binary_file = 's3://test-cloudstorageio/sample.jpg'
         self.text_file = 's3://test-cloudstorageio/sample-files/sample.txt'
 
@@ -97,11 +98,5 @@ class TestS3Interface(unittest.TestCase):
 
     def tearDown(self):
         pass
-        # tear down states
-        # try:
-        #     self.s3.remove(self.new_binary_file)
-        #     self.s3.open(self.text_file).write(self.sample_text)
-        # except Exception:
-        #     pass
 
 

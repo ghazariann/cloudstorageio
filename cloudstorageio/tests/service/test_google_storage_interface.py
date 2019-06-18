@@ -98,8 +98,3 @@ class TestGoogleStorageInterface(unittest.TestCase):
     def tearDown(self):
         pass
         # tear down states
-        # try:
-        #     self.s3.remove(self.new_binary_file)
-        #     self.s3.open(self.text_file).write(self.sample_text)
-        # except Exception:
-        #     pass
