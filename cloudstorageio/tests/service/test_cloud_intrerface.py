@@ -21,7 +21,7 @@ class TestCloudInterface(unittest.TestCase):
 
     def test_copy(self):
         # copy local file to gs
-        self.ci.copy(source=self.local_pic, to=self.copy_file_gs)
+        self.ci.copy(from_path=self.local_pic, to_path=self.copy_file_gs)
         res1 = self.ci.isfile(self.copy_file_gs)
         self.assertEqual(res1, True)
 
@@ -30,9 +30,12 @@ class TestCloudInterface(unittest.TestCase):
         self.assertEqual(res2, False)
 
         # copy gs file to s3
-        self.ci.copy(source=self.copy_file_gs, to=self.copy_file_s3)
+        self.ci.copy(from_path=self.copy_file_gs, to_path=self.copy_file_s3)
         res3 = self.ci.isfile(self.copy_file_s3)
         self.assertEqual(res3, True)
+
+        # copy dropbox file to local storage
+        # TODO
 
         # delete all created files
         self.ci.remove(self.copy_file_gs)

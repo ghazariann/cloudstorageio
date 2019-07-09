@@ -40,7 +40,7 @@ class DropBoxInterface:
         try:
             self.metadata = self.dbx.files_get_metadata(self.path)
         except ApiError:
-            pass
+            self.metadata = None
 
         if isinstance(self.metadata, FileMetadata):
             self._isfile = True
@@ -144,8 +144,9 @@ class DropBoxInterface:
         if not self._isfile:
             raise FileNotFoundError('No such file: {}'.format(self.path))
 
-        metadata, response = self.dbx.files_download(path="/sample.txt")
+        metadata, response = self.dbx.files_download(path=self.path)
         res = response.content
+        response.close()
 
         if self._mode is not None and 'b' not in self._mode:
             try:
@@ -168,7 +169,7 @@ class DropBoxInterface:
 if __name__ == '__main__':
     t = 'LiDj2MGlmdAAAAAAAAAAovO4Ck0PTSrIk6ZBFVZQxQ5ahdgs3_ILrYjGnw06pWLk'
     di = DropBoxInterface(token=t)
-    with di.open('sample_folder/node1/node1.txt', 'wb') as f:
-        f.write('lorem ipsum')
+    # with di.open('sample_folder/node1/node1.txt', 'wb') as f:
+    #     f.write('lorem ipsum')
 
-    di.remove('sample_folder/node1')
+    di.listdir('not_found/not_found.txt')
