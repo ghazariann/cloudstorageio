@@ -99,13 +99,13 @@ class CloudInterface:
         self.identify_path_type(path)
         return self._current_storage.listdir(path)
 
-    def copy(self, source: str, to: str):
+    def copy(self, from_path: str, to_path: str):
         """ Copy given file to new destination
-        :param source: local or remote storage path of existing file
-        :param to: local or remote storage path of new file
+        :param from_path: local or remote storage path of existing file
+        :param to_path: local or remote storage path of new file
         :return:
         """
-        with self.open(source, 'rb') as f:
+        with self.open(from_path, 'rb') as f:
             content = f.read()
-        with self.open(to, 'wb') as f:
+        with self.open(to_path, 'wb') as f:
             f.write(content)
