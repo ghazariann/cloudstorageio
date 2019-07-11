@@ -18,17 +18,17 @@ class LocalStorageInterface:
 
     @staticmethod
     def isfile(path: str):
+        """Checks file existence for given path"""
         return os.path.isfile(path)
 
     @staticmethod
     def isdir(path: str):
+        """Checks dictionary existence for given path"""
         return os.path.isdir(path)
 
     def remove(self, path: str):
-        """Check given path status and remove object(s) if found any
-        :param path: full path of local file/folder
-        :return:
-        """
+        """Removes file/folder"""
+
         if self.isfile(path):
             os.remove(path)
         elif self.isdir(path):
@@ -37,10 +37,8 @@ class LocalStorageInterface:
             raise FileNotFoundError(f'No such file or dictionary: {path}')
 
     def listdir(self, path: str):
-        """Check given dictionary status and list all object of its
-        :param path: full path of local file/folder
-        :return:
-        """
+        """Lists all files/folders of dictionary"""
+
         if not self.isdir(path) and not self.isfile(path):
             raise FileNotFoundError(f'No such file or dictionary: {path}')
 

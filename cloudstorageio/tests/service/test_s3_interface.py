@@ -9,8 +9,9 @@ class TestS3Interface(unittest.TestCase):
     def setUp(self):
         """
         for the beginning make sure to have this structure in your s3 storage
-                                                                          sample-files/       v/      sample.jpg  v
-                                                                             sample.txt       v.txt
+
+                                                                  node1 ->   sample-files/       v/      sample.jpg   v
+                                                                  node2 ->   sample.txt          v.txt
         """
 
         self.s3 = S3Interface()
@@ -41,6 +42,7 @@ class TestS3Interface(unittest.TestCase):
         f = self.s3.open(self.text_file, 'r')
         res = f.read()
         self.assertIsInstance(res, str)
+
         open_state = self.s3.open(self.not_found_file)
         self.assertRaises(FileNotFoundError, open_state.read)
 

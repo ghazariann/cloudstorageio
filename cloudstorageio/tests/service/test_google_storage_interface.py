@@ -10,8 +10,8 @@ class TestGoogleStorageInterface(unittest.TestCase):
         """
         for the beginning make sure to have this structure in your google cloud  storage
 
-                                                                          sample-files/    v/  sample.jpg  v
-                                                                             sample.txt
+                                                                    node1  ->      sample-files/    v/  sample.jpg  v
+                                                                    node2  ->      sample.txt
         """
         self.gs = GoogleStorageInterface()
 

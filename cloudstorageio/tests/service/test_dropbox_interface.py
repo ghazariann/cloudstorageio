@@ -13,9 +13,7 @@ class TestDropBoxInterface(unittest.TestCase):
                                                                           sample_files/    v/  sample.jpg  v
                                                                              sample.txt
         """
-
-        self.token = 'LiDj2MGlmdAAAAAAAAAAovO4Ck0PTSrIk6ZBFVZQxQ5ahdgs3_ILrYjGnw06pWLk'
-        self.dbx = DropBoxInterface(self.token)
+        self.dbx = DropBoxInterface()
 
         # this 4 paths have to be in storage
         self.folder_path = 'sample_files'

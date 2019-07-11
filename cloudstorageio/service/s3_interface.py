@@ -1,12 +1,12 @@
-""" Class S3Interface handles with S3 Storage files
+""" Class S3Interface handles with S3 Storage files/folders
     S3Interface has
-                        'read' and 'write' methods (can be accessed by 'open' method)
+                        read and write methods (can be accessed by open method)
                         isfile and isdir methods for checking object status (file, folder)
                         listdir method for listing folder's content
                         remove method for removing file/folder
 
     Boto3 API itself doesn't have any concept of a "folder".
-        In S3Interface you can differentiate file/folder like in local env
+        In S3Interface you can differentiate file/folder like in local environment
 
 """
 
@@ -22,10 +22,16 @@ class S3Interface:
     PREFIX = "s3://"
 
     def __init__(self, **kwargs):
-        self._region = kwargs.pop('region_name', None)
+        """Initializes S3Interface instance, creates session and resource for given credentials
+        :param kwargs:
+        """
+
+        # try to find necessary parameters from given kwargs, if not, assign none
+        self._region = kwargs.pop('aws_region_name', None)
         self._acc_key = kwargs.pop('aws_access_key_id', None)
         self._acc_secret_key = kwargs.pop('aws_secret_access_key', None)
 
+        # check given two access keys mutually existence
         if (self._acc_secret_key and not self._acc_key) or (self._acc_key and not self._acc_secret_key):
             raise ConnectionRefusedError('Please provide both aws_access_key_id and aws_secret_access_key')
 
@@ -62,8 +68,7 @@ class S3Interface:
 
     @staticmethod
     def get_bucket_region(bucket_name):
-        """
-        Get region name of specific bucket
+        """Get region name of specific bucket
         :param bucket_name: name of s3 bucket object
         :return:
         """
@@ -125,19 +130,18 @@ class S3Interface:
         if self._isdir or self._isfile:
             self._object_exists = True
 
-    def isfile(self, path: str):
+    def isfile(self, path: str) -> bool:
+        """Checks file existence for given path"""
         self._analyse_path(path)
         return self._isfile
 
-    def isdir(self, path: str):
+    def isdir(self, path: str) -> bool:
+        """Checks dictionary existence for given path"""
         self._analyse_path(path)
         return self._isdir
 
-    def listdir(self, path: str):
-        """Check given dictionary type and list content
-        :param path: full path of s3 object (file/folder)
-        :return:
-        """
+    def listdir(self, path: str) -> list:
+        """Lists content for given folder path"""
         self._analyse_path(path)
         if not self._object_exists:
             raise FileNotFoundError(f'No such file or dictionary: {path}')
@@ -146,11 +150,8 @@ class S3Interface:
 
         return self._listdir
 
-    def remove(self, path: str):
-        """Check given path type and remove object(s) if found any
-        :param path: full path of s3 object (file/folder)
-        :return:
-        """
+    def remove(self, path: str) -> None:
+        """Deletes file/folder"""
         self._analyse_path(path)
         if not self._object_exists:
             raise FileNotFoundError(f"Object with path {path} does not exists")
@@ -159,13 +160,13 @@ class S3Interface:
             obj.delete()
 
     def open(self, path: str, mode: Optional[str] = None, *args, **kwargs):
-        """Open a file from s3 and return the S3Interface object"""
+        """Opens a file from s3 and return the S3Interface object"""
         self._mode = mode
         self._analyse_path(path)
         return self
 
     def read(self) -> Union[str, bytes]:
-        """ Read S3 file and return the bytes
+        """Reads S3 file and return the bytes
         :return: String content of the file
         """
         if not self._isfile:
@@ -184,9 +185,9 @@ class S3Interface:
     def write(self, content: Union[str, bytes, io.IOBase], metadata: Optional[dict] = None,
               acl: Optional[str] = 'private'):
 
-        """ Write text to a file on s3
+        """Writes text to a file on s3
         :param content: The content that should be written to a file
-        :param metadata:
+        :param metadata: Metadata for file
         :param acl: access control permission for written file ('private' by default)
         :return: String content of the file specified in the file path argument
         """

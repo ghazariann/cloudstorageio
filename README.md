@@ -10,7 +10,7 @@ _Developed and tested on python 3.7+_
 ## Getting Started
 These instructions will get you a copy of the project up and running on your local machine.
 
-* #### S3 configs  
+* #### S3 confidropboxgs  
     ```bash 
     pip install awscli --upgrade --user 
     ```
@@ -37,6 +37,17 @@ These instructions will get you a copy of the project up and running on your loc
     ```
       
    [click here](https://cloud.google.com/storage/docs/reference/libraries) for more info about configuration and installation
+
+* #### Dropbox workspace configs 
+    Provide app access token by setting the environment variable DROPBOX_TOKEN.
+    Replace [TOKEN] with the generated token of your dropbox app
+  
+    ```bash 
+    DROPBOX_TOKEN='TOKEN' 
+    ``` 
+   
+   [click here](http://99rabbits.com/get-dropbox-access-token/) for more info about configuration and installation
+
 
 ### Installation
 ```
@@ -66,22 +77,22 @@ with ci.open(s3_file_path, 'rb') as f:
 ```python
 from cloudstorageio import CloudInterface
 
-google_folder_path = 'gs://bucket-name/folder'
+dropbox_folder_path = 'dbx://bucket-name/folder'
 s3_file_path = 's3://bucket-name/path-to-file/sample-pic.jpg'
 ci = CloudInterface()
 
 ci.isfile(s3_file_path) # returns True 
-ci.isdir(google_folder_path) # returns True
+ci.isdir(dropbox_folder_path) # returns True
 ci.remove(s3_file_path) # removes file 
-ci.listdir(google_folder_path) # list folder content 
+ci.listdir(dropbox_folder_path) # lists folder content 
 ```
 * Copy file 
 ```python
 from cloudstorageio import CloudInterface
 
-s3_file_path = 's3://bucket-name/path-to-file/sample-pic.jpg'
+dropbox_file_path = 'dbx://bucket-name/path-to-file/sample-pic.jpg'
 google_file_path = 'gs://bucket-name/path-to-file/sample-file.txt'
 ci = CloudInterface()
 
-ci.copy(source=s3_file_path, to=google_file_path) # copies s3 file to google 
+ci.copy(from_path=dropbox_file_path, to_path=google_file_path) # copies dropbox file to google 
 ```

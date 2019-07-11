@@ -1,6 +1,12 @@
-""" Class GoogleStorageInterface handles with Google Cloud Storage files
+""" Class GoogleStorageInterface handles with Google Cloud Storage files/folders
 
-    Class GoogleStorageInterface has 'read' and 'write' methods each of them can be accessed by 'open' method
+    Class GoogleStorageInterface has
+                                    read and write methods (can be accessed by open method)
+                                    isfile and isdir methods for checking object status (file, folder)
+                                    listdir method for listing folder's content
+                                    remove method for removing file/folder
+    Google Storage API itself doesn't have any concept of a "folder".
+        In GoogleStorageInterface you can differentiate file/folder like in local environment
 """
 
 import io
@@ -15,6 +21,9 @@ class GoogleStorageInterface:
     PREFIX = "gs://"
 
     def __init__(self, **kwargs):
+        """Initializes GoogleStorageInterface instance, creates storage client
+        :param kwargs:
+        """
         self._encoding = 'utf8'
         self._storage_client = storage.Client()
         self._mode = None
@@ -53,7 +62,7 @@ class GoogleStorageInterface:
             self._isdir = True
 
     def _populate_listdir(self, blob_name):
-        """Append each blob inner name to self._listdir
+        """Appends each blob inner name to self._listdir
         :param blob_name: storage.blob.Blob object
         :return:
         """
@@ -73,7 +82,7 @@ class GoogleStorageInterface:
                 self._listdir.append(inner_object_name)
 
     def _analyse_path(self, path: str):
-        """From given path create bucket, blob objects, list and detect object type (file/folder)
+        """From given path creates bucket, blob objects, lists and detects object type (file/folder)
         :param path: full path of file/folder
         :return:
         """
@@ -98,18 +107,18 @@ class GoogleStorageInterface:
         self._blob = self._bucket.get_blob(self._current_path)
 
     def isfile(self, path: str):
+        """Checks file existence for given path"""
         self._analyse_path(path)
         return self._isfile
 
     def isdir(self, path: str):
+        """Checks dictionary existence for given path"""
         self._analyse_path(path)
         return self._isdir
 
     def listdir(self, path: str):
-        """Check given dictionary's existence and list content
+        """Checks given dictionary's existence and lists content
         :param path: full path of gs object (file/folder)
-        :return:
-        :param path:
         :return:
         """
         self._analyse_path(path)
@@ -121,10 +130,7 @@ class GoogleStorageInterface:
         return self._listdir
 
     def remove(self, path: str):
-        """Check given path type and remove object(s) if found any
-        :param path: full path of gs object (file/folder)
-        :return:
-        """
+        """Removes file/folder"""
         self._analyse_path(path)
         if not self._object_exists:
             raise FileNotFoundError(f'No such file or dictionary: {path}')
@@ -133,13 +139,13 @@ class GoogleStorageInterface:
             obj.delete()
 
     def open(self, path: str, mode: Optional[str] = None, *args, **kwargs):
-        """Open a file from gs and return the GoogleStorageInterface object"""
+        """Opens a file from gs and return the GoogleStorageInterface object"""
         self._mode = mode
         self._analyse_path(path)
         return self
 
     def read(self) -> Union[str, bytes]:
-        """ Read gs file and return the bytes
+        """ Reads gs file and return the bytes
         :return: String content of the file
         """
         if not self._isfile:
@@ -157,7 +163,7 @@ class GoogleStorageInterface:
         return res
 
     def write(self, content: Union[str, bytes, io.IOBase]):
-        """ Write text to a file on google storage
+        """ Writes text to a file on google storage
         :param content: The content that should be written to a file
         :return: String content of the file specified in the file path argument
         """

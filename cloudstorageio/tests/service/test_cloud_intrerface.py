@@ -18,6 +18,7 @@ class TestCloudInterface(unittest.TestCase):
         self.local_pic = os.path.join(self.local_test_folder, 'Moon.jpg')
         self.copy_file_gs = 'gs://test-cloudstorageio/copy-moon.jpg'
         self.copy_file_s3 = 's3://test-cloudstorageio/copy-moon.jpg'
+        self.copy_file_dbx = 'dbx://sample_files/copy-moon.jpg'
 
     def test_copy(self):
         # copy local file to gs
@@ -34,9 +35,13 @@ class TestCloudInterface(unittest.TestCase):
         res3 = self.ci.isfile(self.copy_file_s3)
         self.assertEqual(res3, True)
 
-        # copy dropbox file to local storage
-        # TODO
+        # copy local storage file to dropbox
+        self.ci.copy(from_path=self.local_pic, to_path=self.copy_file_dbx)
+        res4 = self.ci.isfile(self.copy_file_dbx)
+        self.assertEqual(res4, True)
 
+    def tearDown(self) -> None:
         # delete all created files
         self.ci.remove(self.copy_file_gs)
         self.ci.remove(self.copy_file_s3)
+        self.ci.remove(self.copy_file_dbx)

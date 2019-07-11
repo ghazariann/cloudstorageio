@@ -1,14 +1,37 @@
+""" Class DropBoxInterface handles with DropBoxInterface workspace files/folders
+
+    Class DropBoxInterface has
+                                    read and write methods (can be accessed by open method)
+                                    isfile and isdir methods for checking object status (file, folder)
+                                    listdir method for listing folder's content
+                                    remove method for removing file/folder
+"""
+
+import os
+import dropbox
+
 from typing import Union, Optional
 from dropbox.files import FileMetadata, FolderMetadata, WriteMode
 from dropbox.exceptions import ApiError
-
-import dropbox
+from dropbox.stone_validators import ValidationError
 
 from cloudstorageio.utils.logger import logger
 
 
 class DropBoxInterface:
-    def __init__(self, token: str):
+    PREFIX = 'dbx://'
+
+    def __init__(self, **kwargs):
+        """Initializes DropBoxInterface instance, creates dbx instance
+        :param kwargs:
+        """
+        # try to find token from given kwargs arguments or from os environment
+        self.token = kwargs.pop('dropbox_token', None)
+        if not self.token:
+            self.token = os.environ.get('DROPBOX_TOKEN')
+        if not self.token:
+            raise ValueError('Please specify dropbox app access key')
+
         self._encoding = 'utf8'
         self._mode = None
         self._current_path = None
@@ -16,8 +39,7 @@ class DropBoxInterface:
         self.metadata = None
         self.path = None
 
-        self._toke = token
-        self.dbx = dropbox.Dropbox(token)
+        self.dbx = dropbox.Dropbox(self.token)
 
     @property
     def path(self):
@@ -27,19 +49,27 @@ class DropBoxInterface:
 
     @path.setter
     def path(self, value):
+
         if value is None:
             self._current_path = None
         else:
-            self._current_path = '/' + value
+            value = value.split(self.PREFIX)[-1]
+
+            if value in ('.', ''):
+                self._current_path = ''
+            else:
+                if value[0] == '/':
+                    self._current_path = value
+                else:
+                    self._current_path = f'/{value}'
 
     def _detect_path_type(self):
-        """ Detect whether given path is file, folder or does not exists
-        :return:
-        """
-
+        """Detects whether given path is file, folder or does not exists"""
+        if self.path == '':
+            self._isdir = True
         try:
             self.metadata = self.dbx.files_get_metadata(self.path)
-        except ApiError:
+        except (ApiError, ValidationError):
             self.metadata = None
 
         if isinstance(self.metadata, FileMetadata):
@@ -48,17 +78,15 @@ class DropBoxInterface:
             self._isdir = True
 
     def _populate_listdir(self):
+        """Appends each file.folder name to self._listdir"""
         try:
             folder_metadata_list = self.dbx.files_list_folder(self.path).entries
             self._listdir = [f.name for f in folder_metadata_list]
-        except ApiError:
+        except (ApiError, ValidationError):
             pass
 
     def _analyse_path(self, path: str):
-        """
-        :param path:
-        :return:
-        """
+        """From given path lists and detects object type (file/folder)"""
 
         self._isfile = False
         self._isdir = False
@@ -73,18 +101,17 @@ class DropBoxInterface:
             self._object_exists = True
 
     def isfile(self, path: str):
+        """Checks file existence for given path"""
         self._analyse_path(path)
         return self._isfile
 
     def isdir(self, path: str):
+        """Checks dictionary existence for given path"""
         self._analyse_path(path)
         return self._isdir
 
     def listdir(self, path: str):
-        """Check given dictionary type and list content
-        :param path: full path of s3 object (file/folder)
-        :return:
-        """
+        """Lists content for given folder path"""
         self._analyse_path(path)
         if not self._object_exists:
             raise FileNotFoundError(f'No such file or dictionary: {path}')
@@ -94,29 +121,22 @@ class DropBoxInterface:
         return self._listdir
 
     def remove(self, path: str):
-        """Check given path type and remove object(s) if found any
-        :param path: full path of s3 object (file/folder)
-        :return:
-        """
+        """Deletes file/folder"""
         self._analyse_path(path)
         if not self._object_exists:
             raise FileNotFoundError(f"Object with path {path} does not exists")
 
         self.dbx.files_delete(self.path)
 
-        # for obj in self._object_summary_list:
-        #     obj.delete()
-
     def open(self, path: str, mode: Optional[str] = None, *args, **kwargs):
-        """Open a file from dropbox and return the DropBoxInterface object"""
+        """Opens a file from dropbox and returns the DropBoxInterface object"""
         self._mode = mode
         self._analyse_path(path)
 
         return self
 
     def write(self, content: Union[str, bytes], metadata: Optional[dict] = None):
-
-        """ Write content to file on dropBox
+        """Writes content to file on dropBox
         :param content: The content that should be written to a file
         :param metadata:
         :return: String content of the file specified in the file path argument
@@ -138,7 +158,7 @@ class DropBoxInterface:
         self.dbx.files_upload(f=content, path=self.path, mode=self._write_mode)
 
     def read(self) -> Union[str, bytes]:
-        """ Read dropBox file and return the bytes
+        """Reads dropBox file and returns the bytes
         :return: String content of the file
         """
         if not self._isfile:
@@ -164,12 +184,3 @@ class DropBoxInterface:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._is_open = False
         self.path = None
-
-
-if __name__ == '__main__':
-    t = 'LiDj2MGlmdAAAAAAAAAAovO4Ck0PTSrIk6ZBFVZQxQ5ahdgs3_ILrYjGnw06pWLk'
-    di = DropBoxInterface(token=t)
-    # with di.open('sample_folder/node1/node1.txt', 'wb') as f:
-    #     f.write('lorem ipsum')
-
-    di.listdir('not_found/not_found.txt')
