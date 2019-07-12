@@ -56,10 +56,11 @@ class GoogleStorageInterface:
         :param blob_name: name of blob object
         :return:
         """
-        if blob_name == self._current_path:
-            self._isfile = True
-        if self._current_path_with_backslash in blob_name:
-            self._isdir = True
+        if not self._isdir:
+            if self._current_path_with_backslash in blob_name:
+                self._isdir = True
+            if blob_name == self._current_path:
+                self._isfile = True
 
     def _populate_listdir(self, blob_name):
         """Appends each blob inner name to self._listdir
@@ -80,6 +81,7 @@ class GoogleStorageInterface:
 
             if inner_object_name != '' and inner_object_name not in self._listdir:
                 self._listdir.append(inner_object_name)
+                return inner_object_name
 
     def _analyse_path(self, path: str):
         """From given path creates bucket, blob objects, lists and detects object type (file/folder)
@@ -94,17 +96,20 @@ class GoogleStorageInterface:
 
         self.path = path
         self._bucket = self._storage_client.get_bucket(self._current_bucket)
-        self._blob_objects = list(self._bucket.list_blobs(prefix=self._current_path))
+        self._blob_objects = self._bucket.list_blobs(prefix=self._current_path)
 
-        self._blob_key_names_list = [obj.name for obj in self._blob_objects]
+        # self._blob_key_names_list = [obj.name for obj in self._blob_objects]
 
-        for blob_name in self._blob_key_names_list:
-            self._detect_blob_object_type(blob_name)
-            self._populate_listdir(blob_name)
+        for blob_name in self._blob_objects:
+            self._detect_blob_object_type(blob_name.name)
+            self._populate_listdir(blob_name.name)
 
         if self._isdir or self._isfile:
             self._object_exists = True
-        self._blob = self._bucket.get_blob(self._current_path)
+        try:
+            self._blob = self._bucket.get_blob(self._current_path)
+        except Exception as e:
+            print(e, self._current_path)
 
     def isfile(self, path: str):
         """Checks file existence for given path"""
@@ -127,6 +132,7 @@ class GoogleStorageInterface:
         elif not self._isdir:
             raise NotADirectoryError(f'Not a directory: {path}')
 
+        # blob_objects = self._bucket.list_blobs(prefix=self._current_path)
         return self._listdir
 
     def remove(self, path: str):
@@ -135,7 +141,9 @@ class GoogleStorageInterface:
         if not self._object_exists:
             raise FileNotFoundError(f'No such file or dictionary: {path}')
 
-        for obj in self._blob_objects:
+        blob_objects = self._bucket.list_blobs(prefix=self._current_path)
+
+        for obj in blob_objects:
             obj.delete()
 
     def open(self, path: str, mode: Optional[str] = None, *args, **kwargs):
