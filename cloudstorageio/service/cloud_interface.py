@@ -83,23 +83,17 @@ class CloudInterface:
     @staticmethod
     def is_s3_path(path: str) -> bool:
         """Checks if the given path is for S3 storage"""
-        if path.startswith(S3Interface.PREFIX):
-            return True
-        return False
+        return path.startswith(S3Interface.PREFIX)
 
     @staticmethod
     def is_google_storage_path(path: str) -> bool:
         """Checks if the given path is for google storage"""
-        if path.startswith(GoogleStorageInterface.PREFIX):
-            return True
-        return False
+        return path.startswith(GoogleStorageInterface.PREFIX)
 
     @staticmethod
     def is_dropbox_path(path: str) -> bool:
         """Checks if the given path is for dropBox"""
-        if path.startswith(DropBoxInterface.PREFIX):
-            return True
-        return False
+        return path.startswith(DropBoxInterface.PREFIX)
 
     def open(self, file_path: str, mode: Optional[str] = 'rt', *args, **kwargs) -> Callable:
         """Identifies given file path and return "open" method for detected current storage"""
@@ -136,3 +130,10 @@ class CloudInterface:
             content = f.read()
         with self.open(to_path, 'wb') as f:
             f.write(content)
+
+
+if __name__ == '__main__':
+    ci = CloudInterface()
+    ci.isfile('s3://test/fgss/')
+    print('zfdg')
+    print('zfdg')
