@@ -33,6 +33,7 @@ class GoogleStorageInterface:
         self._blob = None
         self.path = None
         self._is_open = False
+        self.only_bucket = False
 
     @property
     def path(self):
@@ -62,6 +63,20 @@ class GoogleStorageInterface:
             if blob_name == self._current_path:
                 self._isfile = True
 
+    def _populate_bucket_listdir(self, blob_name):
+        """Appends each blob inner name to self._listdir for bucket case
+        :param blob_name: storage.blob.Blob object
+        :return:
+        """
+        split_list = blob_name.split(self._current_path_with_backslash, 1)
+        if len(split_list) == 2:
+            inner_object_name = split_list[0] + '/'
+        else:
+            inner_object_name = split_list[0]
+
+        if inner_object_name not in self._listdir:
+            self._listdir.append(inner_object_name)
+
     def _populate_listdir(self, blob_name):
         """Appends each blob inner name to self._listdir
         :param blob_name: storage.blob.Blob object
@@ -81,7 +96,6 @@ class GoogleStorageInterface:
 
             if inner_object_name != '' and inner_object_name not in self._listdir:
                 self._listdir.append(inner_object_name)
-                return inner_object_name
 
     def _analyse_path(self, path: str):
         """From given path creates bucket, blob objects, lists and detects object type (file/folder)
@@ -100,9 +114,14 @@ class GoogleStorageInterface:
 
         # self._blob_key_names_list = [obj.name for obj in self._blob_objects]
 
-        for blob_name in self._blob_objects:
-            self._detect_blob_object_type(blob_name.name)
-            self._populate_listdir(blob_name.name)
+        if self.only_bucket:
+            self._isdir = True
+            for blob in self._blob_objects:
+                self._populate_bucket_listdir(blob_name=blob.name)
+        else:
+            for blob in self._blob_objects:
+                self._detect_blob_object_type(blob_name=blob.name)
+                self._populate_listdir(blob.name)
 
         if self._isdir or self._isfile:
             self._object_exists = True
@@ -189,11 +208,15 @@ class GoogleStorageInterface:
         blob = self._bucket.blob(self._current_path)
         blob.upload_from_string(content)
 
-    @staticmethod
-    def _parse_bucket(path: str) -> Tuple[str, str]:
+    def _parse_bucket(self, path: str) -> Tuple[str, str]:
         """Given a path, return the bucket name and the file path as a tuple"""
         path = path.split(GoogleStorageInterface.PREFIX, 1)[-1]
-        bucket_name, path = path.split('/', 1)
+        try:
+            bucket_name, path = path.split('/', 1)
+        except ValueError:
+            bucket_name, path = path.split('/', 1)[0], ''
+            self.only_bucket = True
+
         return bucket_name, path
 
     def __enter__(self):
@@ -203,4 +226,3 @@ class GoogleStorageInterface:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._is_open = False
         self.path = None
-
