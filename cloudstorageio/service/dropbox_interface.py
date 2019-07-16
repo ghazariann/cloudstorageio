@@ -63,6 +63,9 @@ class DropBoxInterface:
                 else:
                     self._current_path = f'/{value}'
 
+                if self._current_path.endswith('/'):
+                    self._current_path = self._current_path[:-1]
+
     def _detect_path_type(self):
         """Detects whether given path is file, folder or does not exists"""
         if self.path == '':
@@ -92,6 +95,7 @@ class DropBoxInterface:
         self._isdir = False
         self._listdir = list()
         self._object_exists = False
+        self._write_mode = None
 
         self.path = path
         self._detect_path_type()
@@ -155,7 +159,10 @@ class DropBoxInterface:
                                        '+' not in self._mode):
             raise ValueError(f"Mode '{self._mode}' does not allow writing the file")
 
-        self.dbx.files_upload(f=content, path=self.path, mode=self._write_mode)
+        try:
+            self.dbx.files_upload(f=content, path=self.path, mode=self._write_mode)
+        except ApiError:
+            print(f'Failed to upload {self.path} to dropbox')
 
     def read(self) -> Union[str, bytes]:
         """Reads dropBox file and returns the bytes

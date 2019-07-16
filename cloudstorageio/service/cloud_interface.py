@@ -8,14 +8,20 @@
                                 remove method for removing file/folder
                                 copy method for copying file from one storage to another
 """
-
+import functools
+import multiprocessing
 import os
+# from multiprocessing.pool import Pool
+from pathos.multiprocessing import ProcessingPool as Pool
+
 from cloudstorageio.service.google_storage_interface import GoogleStorageInterface
 from cloudstorageio.service.local_storage_interface import LocalStorageInterface
 from cloudstorageio.service.s3_interface import S3Interface
 from cloudstorageio.service.dropbox_interface import DropBoxInterface
 
 from typing import Optional, Callable
+
+from cloudstorageio.utils.timer import timer
 
 
 class CloudInterface:
@@ -120,6 +126,11 @@ class CloudInterface:
         self.identify_path_type(path)
         return self._current_storage.listdir(path)
 
+    def list_recursive(self, path: str):
+        """Lists all files/folders containing in given folder path"""
+        self.identify_path_type(path)
+        return self._current_storage.list_recursive(path)
+
     def copy(self, from_path: str, to_path: str):
         """Copies given file to new destination
         :param from_path: local or remote storage path of existing file
@@ -131,9 +142,16 @@ class CloudInterface:
         with self.open(to_path, 'wb') as f:
             f.write(content)
 
+    def inner_copy(self, p, from_path, to_path):
+        self.copy(from_path=os.path.join(from_path, p), to_path=os.path.join(to_path, p))
 
-if __name__ == '__main__':
-    ci = CloudInterface()
-    ci.isfile('s3://test/fgss/')
-    print('zfdg')
-    print('zfdg')
+    @timer
+    def copy_batch(self, from_path: str, to_path: str):
+
+        path_list = self.list_recursive(from_path)
+        file_list = [f for f in path_list if not f.endswith('/')]
+        folder_list = [f for f in path_list if f.endswith('/')]
+
+        p = Pool(multiprocessing.cpu_count())
+        funct = functools.partial(self.inner_copy, from_path=from_path, to_path=to_path)
+        p.map(funct, file_list)
