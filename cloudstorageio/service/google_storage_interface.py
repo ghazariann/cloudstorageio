@@ -10,10 +10,9 @@
 """
 
 import io
+
 from typing import Tuple, Union, Optional
-
 from google.cloud import storage
-
 from cloudstorageio.utils.logger import logger
 
 
@@ -50,6 +49,8 @@ class GoogleStorageInterface:
             self._current_bucket = None
         else:
             self._current_bucket, self._current_path = self._parse_bucket(value)
+
+            # some corrections depending on input path
             if self._current_path.endswith('/'):
                 self._current_path_with_backslash = self._current_path
                 self._current_path = self._current_path[:-1]
@@ -101,22 +102,27 @@ class GoogleStorageInterface:
             if inner_object_name != '' and inner_object_name not in self._listdir:
                 self._listdir.append(inner_object_name)
 
+    def _init_path(self, path: str):
+        """Initializes path specific fields"""
+        self._isfile = False
+        self._isdir = False
+        self._listdir = list()
+        self._object_exists = False
+        self.only_bucket = False
+
+        self.path = path
+        self._bucket = self._storage_client.get_bucket(self._current_bucket)
+        self._blob_objects = self._bucket.list_blobs(prefix=self._current_path)
+
+        self._blob_key_names_list = (obj.name for obj in self._blob_objects)
+
     def _analyse_path(self, path: str):
         """From given path creates bucket, blob objects, lists and detects object type (file/folder)
         :param path: full path of file/folder
         :return:
         """
 
-        self._isfile = False
-        self._isdir = False
-        self._listdir = list()
-        self._object_exists = False
-
-        self.path = path
-        self._bucket = self._storage_client.get_bucket(self._current_bucket)
-        self._blob_objects = self._bucket.list_blobs(prefix=self._current_path)
-
-        self._blob_key_names_list = [obj.name for obj in self._blob_objects]
+        self._init_path(path)
 
         if self.only_bucket:
             self._isdir = True
@@ -155,7 +161,6 @@ class GoogleStorageInterface:
         elif not self._isdir:
             raise NotADirectoryError(f'Not a directory: {path}')
 
-        # blob_objects = self._bucket.list_blobs(prefix=self._current_path)
         return self._listdir
 
     def remove(self, path: str):
@@ -224,13 +229,12 @@ class GoogleStorageInterface:
         return bucket_name, path
 
     def list_recursive(self, path):
-        self._analyse_path(path)
+        """returns flat list of all files"""
+        self._init_path(path)
         if not self._object_exists:
             raise FileNotFoundError(f'No such file or dictionary: {path}')
         elif not self._isdir:
             raise NotADirectoryError(f'Not a directory: {path}')
-
-        # blob_objects = self._bucket.list_blobs(prefix=self._current_path)
         return self._blob_key_names_list
 
     def __enter__(self):

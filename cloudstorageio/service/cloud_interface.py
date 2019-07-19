@@ -11,8 +11,7 @@
 import functools
 import multiprocessing
 import os
-# from multiprocessing.pool import Pool
-from pathos.multiprocessing import ProcessingPool as Pool
+from multiprocessing.pool import Pool
 
 from cloudstorageio.service.google_storage_interface import GoogleStorageInterface
 from cloudstorageio.service.local_storage_interface import LocalStorageInterface
@@ -21,13 +20,16 @@ from cloudstorageio.service.dropbox_interface import DropBoxInterface
 
 from typing import Optional, Callable
 
+from cloudstorageio.utils.logger import logger
 from cloudstorageio.utils.timer import timer
 
 
 class CloudInterface:
 
     def __init__(self, aws_region_name: Optional[str] = None, aws_access_key_id: Optional[str] = None,
-                 aws_secret_access_key: Optional[str] = None, dropbox_token: Optional[str] = None, **kwargs):
+                 aws_secret_access_key: Optional[str] = None, dropbox_token: Optional[str] = None,
+                 dropbox_root: Optional[bool] = False, **kwargs):
+
         """Initializes CloudInterface instance
         :param aws_region_name: region name for S3 storage
         :param aws_access_key_id: access key id for S3 storage
@@ -41,6 +43,7 @@ class CloudInterface:
         self._kwargs['aws_access_key_id'] = aws_access_key_id
         self._kwargs['aws_secret_access_key'] = aws_secret_access_key
         self._kwargs['dropbox_token'] = dropbox_token
+        self._kwargs['dropbox_root'] = dropbox_root
 
         self._filename = None
         self._mode = None
@@ -142,16 +145,36 @@ class CloudInterface:
         with self.open(to_path, 'wb') as f:
             f.write(content)
 
-    def inner_copy(self, p, from_path, to_path):
-        self.copy(from_path=os.path.join(from_path, p), to_path=os.path.join(to_path, p))
+    def call_copy(self, p, from_path, to_path):
+        """call copy with from/to full paths"""
+        try:
+            full_from_path = os.path.join(from_path, p)
+            full_to_path = os.path.join(to_path, p)
+
+            self.copy(from_path=full_from_path, to_path=full_to_path)
+            logger.info(f'Copied {full_from_path} file to {full_to_path}')
+        except Exception as e:
+            print(e, p)
 
     @timer
-    def copy_batch(self, from_path: str, to_path: str):
+    def copy_batch(self, from_path: str, to_path: str, multiprocess: Optional[bool] = True):
+        """ Copy entire batch(folder) to other destination
+        :param from_path: folder/bucket to copy
+        :param to_path: name of folder to create
+        :param multiprocess: indicator of doing process with multiprocess(faster) or with simple for loop
+        :return:
+        """
 
-        path_list = self.list_recursive(from_path)
-        file_list = [f for f in path_list if not f.endswith('/')]
-        folder_list = [f for f in path_list if f.endswith('/')]
+        full_path_list = self.list_recursive(from_path)
 
-        p = Pool(multiprocessing.cpu_count())
-        funct = functools.partial(self.inner_copy, from_path=from_path, to_path=to_path)
-        p.map(funct, file_list)
+        file_list = (f for f in full_path_list if not f.endswith('/'))
+        if multiprocess:
+            p = Pool(multiprocessing.cpu_count())
+
+            # for each call from_path and to_path are the same
+            partial_func = functools.partial(self.call_copy, from_path=from_path, to_path=to_path)
+            p.map(partial_func, file_list)
+
+        else:
+            for f in file_list:
+                self.copy(os.path.join(from_path, f), os.path.join(to_path, f))

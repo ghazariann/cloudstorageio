@@ -11,6 +11,8 @@ import os
 import dropbox
 
 from typing import Union, Optional
+
+from dropbox.common import PathRoot
 from dropbox.files import FileMetadata, FolderMetadata, WriteMode
 from dropbox.exceptions import ApiError
 from dropbox.stone_validators import ValidationError
@@ -27,6 +29,8 @@ class DropBoxInterface:
         """
         # try to find token from given kwargs arguments or from os environment
         self.token = kwargs.pop('dropbox_token', None)
+        self.root = kwargs.pop('dropbox_root')
+
         if not self.token:
             self.token = os.environ.get('DROPBOX_TOKEN')
         if not self.token:
@@ -41,6 +45,11 @@ class DropBoxInterface:
 
         self.dbx = dropbox.Dropbox(self.token)
 
+        # namespace id starts from root
+        if self.root:
+            root_namespace_id = self.dbx.users_get_current_account().root_info.root_namespace_id
+            self.dbx = self.dbx.with_path_root(PathRoot.namespace_id(root_namespace_id))
+
     @property
     def path(self):
         if self._current_path is None:
@@ -53,16 +62,12 @@ class DropBoxInterface:
         if value is None:
             self._current_path = None
         else:
-            value = value.split(self.PREFIX)[-1]
+            value = value.split(self.PREFIX, 1)[-1]
 
             if value in ('.', ''):
                 self._current_path = ''
             else:
-                if value[0] == '/':
-                    self._current_path = value
-                else:
-                    self._current_path = f'/{value}'
-
+                self._current_path = value if value.startswith('/') else f'/{value}'
                 if self._current_path.endswith('/'):
                     self._current_path = self._current_path[:-1]
 

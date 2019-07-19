@@ -55,7 +55,7 @@ class LocalStorageInterface:
 
         if self.isfile(self.path):
             logger.info('Overwriting {} file'.format(self.path))
-        #
+        # TODO : if not folders make
         # folder = self.path.rsplit('/', 1)[-1]
         # path = folder
         # while not self.isdir(path):
