@@ -55,7 +55,7 @@ class LocalStorageInterface:
 
         if self.isfile(self.path):
             logger.info('Overwriting {} file'.format(self.path))
-        # TODO : if not folders make
+        #
         # folder = self.path.rsplit('/', 1)[-1]
         # path = folder
         # while not self.isdir(path):
@@ -91,24 +91,7 @@ class LocalStorageInterface:
         else:
             raise FileNotFoundError(f'No such file or dictionary: {path}')
 
-    def list_recursive(self, path):
-        """List paths' of all inner file/folder objects"""
-        if not self.isdir(path) and not self.isfile(path):
-            raise FileNotFoundError(f'No such file or dictionary: {path}')
-
-        elif not self.isdir(path):
-            raise NotADirectoryError(f"Not a directory: {path}")
-
-        res = list()
-        for root, dirs, files in os.walk(path):
-            for name in files:
-                res.append(os.path.join(root, name).split(path + '/', 1)[-1])
-            for name in dirs:
-                res.append((os.path.join(root, name).split(path + '/', 1)[-1]) + '/')
-
-        return res
-
-    def listdir(self, path: str):
+    def listdir(self, path: str, recursive: Optional[bool] = True):
         """Lists all files/folders of dictionary"""
 
         if not self.isdir(path) and not self.isfile(path):
@@ -116,8 +99,16 @@ class LocalStorageInterface:
 
         elif not self.isdir(path):
             raise NotADirectoryError(f"Not a directory: {path}")
-
-        return os.listdir(path)
+        if recursive:
+            res = list()
+            for root, dirs, files in os.walk(path):
+                for name in files:
+                    res.append(os.path.join(root, name).split(path + '/', 1)[-1])
+                for name in dirs:
+                    res.append((os.path.join(root, name).split(path + '/', 1)[-1]) + '/')
+            return res
+        else:
+            return os.listdir(path)
 
     def __enter__(self):
         self._is_open = True

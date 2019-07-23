@@ -42,6 +42,7 @@ class DropBoxInterface:
         self._write_mode = None
         self.metadata = None
         self.path = None
+        self.list_recursive = False
 
         self.dbx = dropbox.Dropbox(self.token)
 
@@ -85,17 +86,28 @@ class DropBoxInterface:
         if isinstance(self.metadata, FolderMetadata):
             self._isdir = True
 
-    def _populate_listdir(self):
+    def _populate_listdir(self, recursive: bool):
         """Appends each file.folder name to self._listdir"""
         try:
-            folder_metadata_list = self.dbx.files_list_folder(self.path).entries
-            self._listdir = [f.name for f in folder_metadata_list]
+            if recursive:
+                folder_metadata = self.dbx.files_list_folder(self.path, recursive=True)
+            else:
+                folder_metadata = self.dbx.files_list_folder(self.path)
+
+            for f in folder_metadata.entries:
+                self._listdir.append(f.name)
+
+            while folder_metadata.has_more:
+                cur = folder_metadata.cursor
+                folder_metadata = self.dbx.files_list_folder_continue(cur)
+                for f in folder_metadata.entries:
+                    self._listdir.append(f.name)
+
         except (ApiError, ValidationError):
             pass
 
-    def _analyse_path(self, path: str):
-        """From given path lists and detects object type (file/folder)"""
-
+    def _init_path(self, path):
+        """Initializes path specific fields"""
         self._isfile = False
         self._isdir = False
         self._listdir = list()
@@ -104,8 +116,14 @@ class DropBoxInterface:
 
         self.path = path
         self._detect_path_type()
-        self._populate_listdir()
 
+    def _analyse_path(self, path: str):
+        """From given path lists and detects object type (file/folder)"""
+
+        self._init_path(path)
+
+        if self._isdir:
+            self._populate_listdir(recursive=self.list_recursive)
         if self._isdir or self._isfile:
             self._object_exists = True
 
@@ -119,14 +137,14 @@ class DropBoxInterface:
         self._analyse_path(path)
         return self._isdir
 
-    def listdir(self, path: str):
+    def listdir(self, path: str, recursive: Optional[bool] = False):
         """Lists content for given folder path"""
+        self.list_recursive = recursive
         self._analyse_path(path)
         if not self._object_exists:
             raise FileNotFoundError(f'No such file or dictionary: {path}')
         elif not self._isdir:
             raise NotADirectoryError(f"Not a directory: {path}")
-
         return self._listdir
 
     def remove(self, path: str):

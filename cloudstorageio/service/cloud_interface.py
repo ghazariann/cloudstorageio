@@ -21,14 +21,13 @@ from cloudstorageio.service.dropbox_interface import DropBoxInterface
 from typing import Optional, Callable
 
 from cloudstorageio.utils.logger import logger
-from cloudstorageio.utils.timer import timer
 
 
 class CloudInterface:
 
     def __init__(self, aws_region_name: Optional[str] = None, aws_access_key_id: Optional[str] = None,
                  aws_secret_access_key: Optional[str] = None, dropbox_token: Optional[str] = None,
-                 dropbox_root: Optional[bool] = False, **kwargs):
+                 dropbox_root: Optional[bool] = True, google_credentials_json_path: Optional[str] = None, **kwargs):
 
         """Initializes CloudInterface instance
         :param aws_region_name: region name for S3 storage
@@ -44,6 +43,7 @@ class CloudInterface:
         self._kwargs['aws_secret_access_key'] = aws_secret_access_key
         self._kwargs['dropbox_token'] = dropbox_token
         self._kwargs['dropbox_root'] = dropbox_root
+        self._kwargs['google_credentials_json_path'] = google_credentials_json_path
 
         self._filename = None
         self._mode = None
@@ -124,15 +124,10 @@ class CloudInterface:
         self.identify_path_type(path)
         return self._current_storage.remove(path)
 
-    def listdir(self, path: str):
+    def listdir(self, path: str, recursive: Optional[bool] = False):
         """Lists all files/folders containing in given folder path"""
         self.identify_path_type(path)
-        return self._current_storage.listdir(path)
-
-    def list_recursive(self, path: str):
-        """Lists all files/folders containing in given folder path"""
-        self.identify_path_type(path)
-        return self._current_storage.list_recursive(path)
+        return self._current_storage.listdir(path, recursive)
 
     def copy(self, from_path: str, to_path: str):
         """Copies given file to new destination
@@ -145,18 +140,29 @@ class CloudInterface:
         with self.open(to_path, 'wb') as f:
             f.write(content)
 
-    def call_copy(self, p, from_path, to_path):
-        """call copy with from/to full paths"""
-        try:
-            full_from_path = os.path.join(from_path, p)
-            full_to_path = os.path.join(to_path, p)
+    def move(self, from_path: str, to_path: str):
+        """Moves given file to new destination"""
+        self.copy(from_path=from_path, to_path=to_path)
+        self.remove(path=from_path)
+        logger.info(f'Moved {from_path} file to {to_path}')
 
-            self.copy(from_path=full_from_path, to_path=full_to_path)
-            logger.info(f'Copied {full_from_path} file to {full_to_path}')
-        except Exception as e:
-            print(e, p)
+    # def call_copy(self, p, from_path, to_path):
+    #     """call copy with from/to full paths"""
+    #     try:
+    #         full_from_path = os.path.join(from_path, p)
+    #         full_to_path = os.path.join(to_path, p)
+    #         self.copy(from_path=full_from_path, to_path=full_to_path)
+    #         logger.info(f'Copied {from_path} file to {to_path}')
+    #     except Exception as e:
+    #         logger.info(e, p)
 
-    @timer
+    def _call_copy(self, path: str, from_p: str, to_p: str):
+        """call copy with full paths"""
+        full_from_path = os.path.join(from_p, path)
+        full_to_path = os.path.join(to_p, path)
+        self.copy(from_path=full_from_path, to_path=full_to_path)
+        logger.info(f'Copied {full_from_path} file to {full_to_path}')
+
     def copy_batch(self, from_path: str, to_path: str, multiprocess: Optional[bool] = True):
         """ Copy entire batch(folder) to other destination
         :param from_path: folder/bucket to copy
@@ -165,16 +171,26 @@ class CloudInterface:
         :return:
         """
 
-        full_path_list = self.list_recursive(from_path)
-
+        full_path_list = self.listdir(from_path, recursive=True)
         file_list = (f for f in full_path_list if not f.endswith('/'))
+
         if multiprocess:
-            p = Pool(multiprocessing.cpu_count())
+            pool = Pool(multiprocessing.cpu_count())
 
             # for each call from_path and to_path are the same
-            partial_func = functools.partial(self.call_copy, from_path=from_path, to_path=to_path)
-            p.map(partial_func, file_list)
-
+            partial_func = functools.partial(self._call_copy, from_p=from_path, to_p=to_path)
+            pool.map(partial_func, file_list)
         else:
             for f in file_list:
                 self.copy(os.path.join(from_path, f), os.path.join(to_path, f))
+
+
+if __name__ == '__main__':
+
+    google_credentials_json_path = '/home/vahagn/Dropbox/cognaize_docs/cloudstorage.json'
+    token = 'g9JcHjx4_tAAAAAAAAAAdZFDlfzm1vmpDPvsj1nlGKBc5m0b4WtAuRnzF9pE2bhX'
+
+    local_path = '/home/vahagn/Desktop/dev_testing/pdfs'
+    aws_path = 's3://test-cloudstorageio/sample_folder'
+    ci = CloudInterface(google_credentials_json_path=google_credentials_json_path, dropbox_token=token)
+    ci.remove(aws_path)
