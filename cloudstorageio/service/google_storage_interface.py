@@ -150,18 +150,25 @@ class GoogleStorageInterface:
         self._analyse_path(path)
         return self._isdir
 
-    def listdir(self, path: str):
+    def listdir(self, path: str, recursive: Optional[bool] = False) -> list:
         """Checks given dictionary's existence and lists content
         :param path: full path of gs object (file/folder)
+        :param recursive: list content fully
         :return:
         """
-        self._analyse_path(path)
+        if recursive:
+            self._init_path(path)
+            result = self._blob_key_names_list
+        else:
+            self._analyse_path(path)
+            result = self._listdir
+
         if not self._object_exists:
             raise FileNotFoundError(f'No such file or dictionary: {path}')
         elif not self._isdir:
             raise NotADirectoryError(f'Not a directory: {path}')
 
-        return self._listdir
+        return result
 
     def remove(self, path: str):
         """Removes file/folder"""
@@ -227,15 +234,6 @@ class GoogleStorageInterface:
             self.only_bucket = True
 
         return bucket_name, path
-
-    def list_recursive(self, path):
-        """returns flat list of all files"""
-        self._init_path(path)
-        if not self._object_exists:
-            raise FileNotFoundError(f'No such file or dictionary: {path}')
-        elif not self._isdir:
-            raise NotADirectoryError(f'Not a directory: {path}')
-        return self._blob_key_names_list
 
     def __enter__(self):
         self._is_open = True
