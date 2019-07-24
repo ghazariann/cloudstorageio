@@ -10,9 +10,12 @@
 """
 
 import io
+import itertools
 
 from typing import Tuple, Union, Optional
 from google.cloud import storage
+
+from cloudstorageio.utils.interface import add_slash
 from cloudstorageio.utils.logger import logger
 
 
@@ -48,59 +51,34 @@ class GoogleStorageInterface:
             self._current_path = None
             self._current_bucket = None
         else:
+            value = value[:-1] if value.endswith('/') else value
             self._current_bucket, self._current_path = self._parse_bucket(value)
+            self._current_path_with_backslash = add_slash(self._current_path)
 
-            # some corrections depending on input path
-            if self._current_path.endswith('/'):
-                self._current_path_with_backslash = self._current_path
-                self._current_path = self._current_path[:-1]
-            else:
-                self._current_path_with_backslash = self._current_path + '/'
-
-    def _detect_blob_object_type(self, blob_name: str):
-        """Inner method for detecting given blob object type (file or folder)
-        :param blob_name: name of blob object
+    def _detect_blob_object_type(self):
+        """Hidden method for detecting given blob object type (file or folder)
         :return:
         """
-        if not self._isdir:
-            if self._current_path_with_backslash in blob_name:
-                self._isdir = True
-            if blob_name == self._current_path:
-                self._isfile = True
+        if self._current_path in self._blob_key_names_list:
+            self._isfile = True
+            self._blob_key_names_list.remove(self._current_path)
 
-    def _populate_bucket_listdir(self, blob_name):
+        if self._blob_key_names_list:
+            self._isdir = True
+
+    def _populate_listdir(self, blob_name):
         """Appends each blob inner name to self._listdir for bucket case
         :param blob_name: storage.blob.Blob object
         :return:
         """
         split_list = blob_name.split(self._current_path_with_backslash, 1)
         if len(split_list) == 2:
-            inner_object_name = split_list[0] + '/'
+            inner_object_name = add_slash(split_list[0])
         else:
             inner_object_name = split_list[0]
 
         if inner_object_name not in self._listdir:
             self._listdir.append(inner_object_name)
-
-    def _populate_listdir(self, blob_name):
-        """Appends each blob inner name to self._listdir
-        :param blob_name: storage.blob.Blob object
-        :return:
-        """
-
-        split_list = blob_name.split(self._current_path_with_backslash, 1)
-        if len(split_list) == 2:
-            inner_object_name_list = split_list[-1].split('/', 1)
-
-            if len(inner_object_name_list) == 2:
-                # is dictionary
-                inner_object_name = inner_object_name_list[0] + '/'
-            else:
-                # is file
-                inner_object_name = inner_object_name_list[0]
-
-            if inner_object_name != '' and inner_object_name not in self._listdir:
-                self._listdir.append(inner_object_name)
 
     def _init_path(self, path: str):
         """Initializes path specific fields"""
@@ -114,7 +92,7 @@ class GoogleStorageInterface:
         self._bucket = self._storage_client.get_bucket(self._current_bucket)
         self._blob_objects = self._bucket.list_blobs(prefix=self._current_path)
 
-        self._blob_key_names_list = (obj.name for obj in self._blob_objects)
+        self._blob_key_names_list = [obj.name for obj in self._blob_objects]
 
     def _analyse_path(self, path: str):
         """From given path creates bucket, blob objects, lists and detects object type (file/folder)
@@ -126,12 +104,12 @@ class GoogleStorageInterface:
 
         if self.only_bucket:
             self._isdir = True
-            for blob in self._blob_key_names_list:
-                self._populate_bucket_listdir(blob_name=blob)
         else:
-            for blob in self._blob_key_names_list:
-                self._detect_blob_object_type(blob_name=blob)
-                self._populate_listdir(blob)
+            self._blob_key_names_list = [f.split(self._current_path_with_backslash, 1)[-1] for f in self._blob_key_names_list]
+            self._detect_blob_object_type()
+
+        for blob in self._blob_key_names_list:
+            self._populate_listdir(blob)
 
         if self._isdir or self._isfile:
             self._object_exists = True
@@ -156,11 +134,10 @@ class GoogleStorageInterface:
         :param recursive: list content fully
         :return:
         """
+        self._analyse_path(path)
         if recursive:
-            self._init_path(path)
             result = self._blob_key_names_list
         else:
-            self._analyse_path(path)
             result = self._listdir
 
         if not self._object_exists:

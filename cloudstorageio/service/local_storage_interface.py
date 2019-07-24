@@ -11,10 +11,12 @@ import os
 import shutil
 from typing import Optional, Union
 
+from cloudstorageio.utils.interface import add_slash
 from cloudstorageio.utils.logger import logger
 
 
 class LocalStorageInterface:
+    PREFIX = "lc:/"
 
     def __init__(self):
         self._mode = None
@@ -30,8 +32,11 @@ class LocalStorageInterface:
     def path(self, value):
         if value is None:
             self._current_path = None
+            self._current_path_with_backslash = None
         else:
-            self._current_path = value
+            value = value.split(self.PREFIX, 1)[-1]
+            self._current_path = value[:-1] if value.endswith('/') else value
+            self._current_path_with_backslash = add_slash(self._current_path)
 
     def open(self, path: str, mode: Optional[str] = None, *args, **kwargs):
         """Opens a file from gs and return the GoogleStorageInterface object"""
@@ -52,19 +57,16 @@ class LocalStorageInterface:
         :param content: The content that should be written to a file
         :return: String content of the file specified in the file path argument
         """
+        try:
+            os.makedirs(os.path.dirname(self.path), exist_ok=True)
+        except FileExistsError:
+            os.remove(os.path.dirname(self.path))
+            logger.info(f'File/folder conflict in {os.path.dirname(self.path)} path')
+            os.makedirs(os.path.dirname(self.path), exist_ok=True)
 
         if self.isfile(self.path):
             logger.info('Overwriting {} file'.format(self.path))
-        #
-        # folder = self.path.rsplit('/', 1)[-1]
-        # path = folder
-        # while not self.isdir(path):
-        #     path = path.rsplit('/', 1)[-1]
-        #
-        # while path != folder:
-        #     os.mkdir(path)
-        #     node = (folder.split(path, 1)[1]).split("/", 1)[0]
-        #     folder = os.path.join(folder, node)
+
         if isinstance(content, str):
             content = content.encode('utf8')
 
@@ -91,24 +93,33 @@ class LocalStorageInterface:
         else:
             raise FileNotFoundError(f'No such file or dictionary: {path}')
 
-    def listdir(self, path: str, recursive: Optional[bool] = True):
+    def listdir(self, path: str, recursive: Optional[bool] = False, include_recursive_folders: Optional[bool] = False):
         """Lists all files/folders of dictionary"""
+
+        self.path = path
 
         if not self.isdir(path) and not self.isfile(path):
             raise FileNotFoundError(f'No such file or dictionary: {path}')
 
         elif not self.isdir(path):
             raise NotADirectoryError(f"Not a directory: {path}")
+        res = list()
+
         if recursive:
-            res = list()
             for root, dirs, files in os.walk(path):
                 for name in files:
-                    res.append(os.path.join(root, name).split(path + '/', 1)[-1])
-                for name in dirs:
-                    res.append((os.path.join(root, name).split(path + '/', 1)[-1]) + '/')
+                    res.append(os.path.join(root, name).split(self._current_path_with_backslash, 1)[1])
+                if include_recursive_folders:
+                    for name in dirs:
+                        res.append((os.path.join(root, name).split(self._current_path_with_backslash, 1)[1]) + '/')
             return res
         else:
-            return os.listdir(path)
+            for i in os.listdir(path):
+                if os.path.isdir(os.path.join(path, i)):
+                    res.append(add_slash(i))
+                else:
+                    res.append(i)
+            return res
 
     def __enter__(self):
         self._is_open = True

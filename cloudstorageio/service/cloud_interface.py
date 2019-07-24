@@ -27,13 +27,14 @@ class CloudInterface:
 
     def __init__(self, aws_region_name: Optional[str] = None, aws_access_key_id: Optional[str] = None,
                  aws_secret_access_key: Optional[str] = None, dropbox_token: Optional[str] = None,
-                 dropbox_root: Optional[bool] = True, google_credentials_json_path: Optional[str] = None, **kwargs):
+                 dropbox_root: Optional[bool] = False, google_credentials_json_path: Optional[str] = None, **kwargs):
 
         """Initializes CloudInterface instance
         :param aws_region_name: region name for S3 storage
         :param aws_access_key_id: access key id for S3 storage
         :param aws_secret_access_key: secret access key for S3 storage
         :param dropbox_token: generated token for dropbox app access
+        :param google_credentials_json_path: local path of google credentials file (json)
         :param kwargs:
         """
 
@@ -81,13 +82,13 @@ class CloudInterface:
                 self._dbx = DropBoxInterface(**self._kwargs)
             self._current_storage = self._dbx
         else:
-            raise ValueError(f"`{path}` is invalid. Please use dbx:// prefix for dropbox, s3:// for S3 storage"
-                             f" and gs:// for Google Cloud Storage ")
+            raise ValueError(f"`{path}` is invalid. Please use dbx:// prefix for dropBox, s3:// for S3 storage, "
+                             f" gs:// for Google Cloud Storage and lc:// for your local path")
 
     @staticmethod
     def is_local_path(path: str) -> bool:
         """Checks if the given path is for local storage"""
-        return os.path.exists(path) or os.path.isdir(os.path.dirname(path))
+        return path.startswith(LocalStorageInterface.PREFIX)
 
     @staticmethod
     def is_s3_path(path: str) -> bool:
@@ -146,51 +147,39 @@ class CloudInterface:
         self.remove(path=from_path)
         logger.info(f'Moved {from_path} file to {to_path}')
 
-    # def call_copy(self, p, from_path, to_path):
-    #     """call copy with from/to full paths"""
-    #     try:
-    #         full_from_path = os.path.join(from_path, p)
-    #         full_to_path = os.path.join(to_path, p)
-    #         self.copy(from_path=full_from_path, to_path=full_to_path)
-    #         logger.info(f'Copied {from_path} file to {to_path}')
-    #     except Exception as e:
-    #         logger.info(e, p)
+    def call_copy(self, p, from_path, to_path):
+        """call copy with from/to full paths"""
+        try:
+            full_from_path = os.path.join(from_path, p)
+            full_to_path = os.path.join(to_path, p)
+            self.copy(from_path=full_from_path, to_path=full_to_path)
+            logger.info(f'Copied {from_path} file to {to_path}')
+        except Exception as e:
+            logger.info(e, p)
 
-    def _call_copy(self, path: str, from_p: str, to_p: str):
-        """call copy with full paths"""
-        full_from_path = os.path.join(from_p, path)
-        full_to_path = os.path.join(to_p, path)
-        self.copy(from_path=full_from_path, to_path=full_to_path)
-        logger.info(f'Copied {full_from_path} file to {full_to_path}')
-
-    def copy_batch(self, from_path: str, to_path: str, multiprocess: Optional[bool] = True):
+    def copy_batch(self, from_path: str, to_path: str, multiprocess: Optional[bool] = True,
+                   continue_process: Optional[bool] = False):
         """ Copy entire batch(folder) to other destination
         :param from_path: folder/bucket to copy
         :param to_path: name of folder to create
         :param multiprocess: indicator of doing process with multiprocess(faster) or with simple for loop
+        :param continue_process:
         :return:
         """
+        if continue_process:
+            from_path_list = self.listdir(from_path, recursive=True)
+            to_path_list = self.listdir(to_path, recursive=True)
+            full_path_list = list(set(from_path_list) - set(to_path_list))
+        else:
+            full_path_list = self.listdir(from_path, recursive=True)
 
-        full_path_list = self.listdir(from_path, recursive=True)
         file_list = (f for f in full_path_list if not f.endswith('/'))
 
         if multiprocess:
-            pool = Pool(multiprocessing.cpu_count())
-
+            p = Pool(multiprocessing.cpu_count())
             # for each call from_path and to_path are the same
-            partial_func = functools.partial(self._call_copy, from_p=from_path, to_p=to_path)
-            pool.map(partial_func, file_list)
+            partial_func = functools.partial(self.call_copy, from_path=from_path, to_path=to_path)
+            p.map(partial_func, file_list)
         else:
             for f in file_list:
                 self.copy(os.path.join(from_path, f), os.path.join(to_path, f))
-
-
-if __name__ == '__main__':
-
-    google_credentials_json_path = '/home/vahagn/Dropbox/cognaize_docs/cloudstorage.json'
-    token = 'g9JcHjx4_tAAAAAAAAAAdZFDlfzm1vmpDPvsj1nlGKBc5m0b4WtAuRnzF9pE2bhX'
-
-    local_path = '/home/vahagn/Desktop/dev_testing/pdfs'
-    aws_path = 's3://test-cloudstorageio/sample_folder'
-    ci = CloudInterface(google_credentials_json_path=google_credentials_json_path, dropbox_token=token)
-    ci.remove(aws_path)

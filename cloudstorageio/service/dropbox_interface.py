@@ -9,7 +9,6 @@
 
 import os
 import dropbox
-
 from typing import Union, Optional
 
 from dropbox.common import PathRoot
@@ -18,6 +17,7 @@ from dropbox.exceptions import ApiError
 from dropbox.stone_validators import ValidationError
 
 from cloudstorageio.utils.logger import logger
+from cloudstorageio.utils.interface import add_slash
 
 
 class DropBoxInterface:
@@ -43,6 +43,7 @@ class DropBoxInterface:
         self.metadata = None
         self.path = None
         self.list_recursive = False
+        self.include_folders = False
 
         self.dbx = dropbox.Dropbox(self.token)
 
@@ -69,8 +70,7 @@ class DropBoxInterface:
                 self._current_path = ''
             else:
                 self._current_path = value if value.startswith('/') else f'/{value}'
-                if self._current_path.endswith('/'):
-                    self._current_path = self._current_path[:-1]
+                self._current_path = self._current_path[:-1] if self._current_path.endswith('/') else self._current_path
 
     def _detect_path_type(self):
         """Detects whether given path is file, folder or does not exists"""
@@ -86,24 +86,30 @@ class DropBoxInterface:
         if isinstance(self.metadata, FolderMetadata):
             self._isdir = True
 
-    def _populate_listdir(self, recursive: bool):
+    def _populate_listdir(self):
         """Appends each file.folder name to self._listdir"""
+
+        def __populate_metadata(metadata):
+            for f in metadata.entries:
+                full_path = f.path_lower.split(add_slash(self.path.lower()), 1)[-1]
+                if isinstance(f, FolderMetadata):
+                    if self.include_folders:
+                        self._listdir.append((add_slash(full_path)))
+                else:
+                    self._listdir.append(full_path)
+
+        folder_metadata = self.dbx.files_list_folder(self.path, recursive=self.list_recursive)
+
+        __populate_metadata(metadata=folder_metadata)
+
+        while folder_metadata.has_more:
+            cur = folder_metadata.cursor
+            folder_metadata = self.dbx.files_list_folder_continue(cur)
+            __populate_metadata(metadata=folder_metadata)
+
         try:
-            if recursive:
-                folder_metadata = self.dbx.files_list_folder(self.path, recursive=True)
-            else:
-                folder_metadata = self.dbx.files_list_folder(self.path)
-
-            for f in folder_metadata.entries:
-                self._listdir.append(f.name)
-
-            while folder_metadata.has_more:
-                cur = folder_metadata.cursor
-                folder_metadata = self.dbx.files_list_folder_continue(cur)
-                for f in folder_metadata.entries:
-                    self._listdir.append(f.name)
-
-        except (ApiError, ValidationError):
+            self._listdir.remove(self.path.lower)
+        except ValueError:
             pass
 
     def _init_path(self, path):
@@ -123,7 +129,7 @@ class DropBoxInterface:
         self._init_path(path)
 
         if self._isdir:
-            self._populate_listdir(recursive=self.list_recursive)
+            self._populate_listdir()
         if self._isdir or self._isfile:
             self._object_exists = True
 
@@ -137,10 +143,12 @@ class DropBoxInterface:
         self._analyse_path(path)
         return self._isdir
 
-    def listdir(self, path: str, recursive: Optional[bool] = False):
+    def listdir(self, path: str, recursive: Optional[bool] = False, include_recursive_folders: Optional[bool] = False):
         """Lists content for given folder path"""
         self.list_recursive = recursive
+        self.include_folders = include_recursive_folders
         self._analyse_path(path)
+
         if not self._object_exists:
             raise FileNotFoundError(f'No such file or dictionary: {path}')
         elif not self._isdir:
@@ -185,7 +193,7 @@ class DropBoxInterface:
         try:
             self.dbx.files_upload(f=content, path=self.path, mode=self._write_mode)
         except ApiError:
-            print(f'Failed to upload {self.path} to dropbox')
+            logger.info(f'Failed to upload {self.path} to dropbox')
 
     def read(self) -> Union[str, bytes]:
         """Reads dropBox file and returns the bytes
