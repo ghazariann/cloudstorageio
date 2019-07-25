@@ -10,8 +10,6 @@
 """
 
 import io
-import itertools
-
 from typing import Tuple, Union, Optional
 from google.cloud import storage
 
@@ -113,10 +111,6 @@ class GoogleStorageInterface:
 
         if self._isdir or self._isfile:
             self._object_exists = True
-        try:
-            self._blob = self._bucket.get_blob(self._current_path)
-        except Exception as e:
-            print(e, self._current_path)
 
     def isfile(self, path: str):
         """Checks file existence for given path"""
@@ -128,15 +122,20 @@ class GoogleStorageInterface:
         self._analyse_path(path)
         return self._isdir
 
-    def listdir(self, path: str, recursive: Optional[bool] = False) -> list:
+    def listdir(self, path: str, recursive: Optional[bool] = False, include_recursive_folders: Optional[bool] = False) -> list:
         """Checks given dictionary's existence and lists content
         :param path: full path of gs object (file/folder)
         :param recursive: list content fully
+        :param include_recursive_folders:
         :return:
         """
         self._analyse_path(path)
+
         if recursive:
-            result = self._blob_key_names_list
+            if include_recursive_folders:
+                result = self._blob_key_names_list
+            else:
+                result = [f for f in self._blob_key_names_list if not f.endswith('/')]
         else:
             result = self._listdir
 
@@ -170,6 +169,8 @@ class GoogleStorageInterface:
         """
         if not self._isfile:
             raise FileNotFoundError('No such file: {}'.format(self.path))
+
+        self._blob = self._bucket.get_blob(self._current_path)
 
         res = self._blob.download_as_string()
 

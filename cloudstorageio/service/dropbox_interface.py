@@ -8,6 +8,8 @@
 """
 
 import os
+import re
+
 import dropbox
 from typing import Union, Optional
 
@@ -91,13 +93,17 @@ class DropBoxInterface:
 
         def __populate_metadata(metadata):
             for f in metadata.entries:
-                full_path = f.path_lower.split(add_slash(self.path.lower()), 1)[-1]
+                try:
+                    full_path = re.split(add_slash(self.path), f.path_display, flags=re.IGNORECASE, maxsplit=1)[1]
+                except IndexError:
+                    full_path = ''
                 if isinstance(f, FolderMetadata):
                     if self.include_folders:
                         self._listdir.append((add_slash(full_path)))
                 else:
                     self._listdir.append(full_path)
 
+        # try:
         folder_metadata = self.dbx.files_list_folder(self.path, recursive=self.list_recursive)
 
         __populate_metadata(metadata=folder_metadata)
@@ -108,9 +114,12 @@ class DropBoxInterface:
             __populate_metadata(metadata=folder_metadata)
 
         try:
-            self._listdir.remove(self.path.lower)
+            self._listdir.remove('')
         except ValueError:
             pass
+
+        # except (ApiError, ValidationError):
+        #     pass
 
     def _init_path(self, path):
         """Initializes path specific fields"""

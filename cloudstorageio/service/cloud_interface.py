@@ -55,11 +55,23 @@ class CloudInterface:
         self._current_storage = None
         self._path = None
 
+    def _reset_fields(self):
+        """Set all instance attributes to none"""
+        self._filename = None
+        self._mode = None
+        self._s3 = None
+        self._gs = None
+        self._local = None
+        self._dbx = None
+        self._current_storage = None
+        self._path = None
+
     def identify_path_type(self, path: str):
         """Identifies "type" of given path and create class instance
         :param path: full path of file/folder
         :return: None
         """
+
         self._path = path.strip()
 
         if self.is_local_path(self._path):
@@ -108,27 +120,37 @@ class CloudInterface:
     def open(self, file_path: str, mode: Optional[str] = 'rt', *args, **kwargs) -> Callable:
         """Identifies given file path and return "open" method for detected current storage"""
         self.identify_path_type(file_path)
-        return self._current_storage.open(path=file_path, mode=mode, *args, **kwargs)
+        res = self._current_storage.open(path=file_path, mode=mode, *args, **kwargs)
+        self._reset_fields()
+        return res
 
     def isfile(self, path: str) -> Callable:
         """Checks file existence for given path"""
         self.identify_path_type(path)
-        return self._current_storage.isfile(path)
+        res = self._current_storage.isfile(path)
+        self._reset_fields()
+        return res
 
     def isdir(self, path: str) -> Callable:
         """Checks dictionary existence for given path"""
         self.identify_path_type(path)
-        return self._current_storage.isdir(path)
+        res = self._current_storage.isdir(path)
+        self._reset_fields()
+        return res
 
     def remove(self, path: str) -> Callable:
         """Deletes file/folder"""
         self.identify_path_type(path)
-        return self._current_storage.remove(path)
+        res = self._current_storage.remove(path)
+        self._reset_fields()
+        return res
 
     def listdir(self, path: str, recursive: Optional[bool] = False):
         """Lists all files/folders containing in given folder path"""
         self.identify_path_type(path)
-        return self._current_storage.listdir(path, recursive)
+        res = self._current_storage.listdir(path, recursive)
+        self._reset_fields()
+        return res
 
     def copy(self, from_path: str, to_path: str):
         """Copies given file to new destination
@@ -147,39 +169,41 @@ class CloudInterface:
         self.remove(path=from_path)
         logger.info(f'Moved {from_path} file to {to_path}')
 
-    def call_copy(self, p, from_path, to_path):
+    def _call_copy(self, p, from_path, to_path):
         """call copy with from/to full paths"""
         try:
             full_from_path = os.path.join(from_path, p)
             full_to_path = os.path.join(to_path, p)
+            logger.info(f'Copying {full_from_path} file to {full_to_path}')
             self.copy(from_path=full_from_path, to_path=full_to_path)
-            logger.info(f'Copied {from_path} file to {to_path}')
         except Exception as e:
             logger.info(e, p)
 
     def copy_batch(self, from_path: str, to_path: str, multiprocess: Optional[bool] = True,
-                   continue_process: Optional[bool] = False):
+                   continue_copy: Optional[bool] = False):
         """ Copy entire batch(folder) to other destination
         :param from_path: folder/bucket to copy
         :param to_path: name of folder to create
         :param multiprocess: indicator of doing process with multiprocess(faster) or with simple for loop
-        :param continue_process:
+        :param continue_copy:
         :return:
         """
-        if continue_process:
+        if continue_copy:
             from_path_list = self.listdir(from_path, recursive=True)
+
             to_path_list = self.listdir(to_path, recursive=True)
             full_path_list = list(set(from_path_list) - set(to_path_list))
         else:
             full_path_list = self.listdir(from_path, recursive=True)
 
-        file_list = (f for f in full_path_list if not f.endswith('/'))
-
         if multiprocess:
             p = Pool(multiprocessing.cpu_count())
             # for each call from_path and to_path are the same
-            partial_func = functools.partial(self.call_copy, from_path=from_path, to_path=to_path)
-            p.map(partial_func, file_list)
+            partial_func = functools.partial(self._call_copy, from_path=from_path, to_path=to_path)
+            p.map(partial_func, full_path_list)
         else:
-            for f in file_list:
-                self.copy(os.path.join(from_path, f), os.path.join(to_path, f))
+            for f in full_path_list:
+                from_full = os.path.join(from_path, f)
+                to_full = os.path.join(to_path, f)
+                logger.info(f'Copied {from_full} file to {to_full}')
+                self.copy(from_full, to_full)
