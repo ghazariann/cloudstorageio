@@ -15,6 +15,7 @@ from typing import Tuple, Optional, Union
 
 import boto3
 
+from cloudstorageio.utils.interface import add_slash
 from cloudstorageio.utils.logger import logger
 
 
@@ -48,6 +49,7 @@ class S3Interface:
         self._object = None
         self.path = None
         self._is_open = False
+        self.only_bucket = False
 
     @property
     def path(self):
@@ -63,8 +65,9 @@ class S3Interface:
             self._current_path = None
             self._current_bucket = None
         else:
+            value = value[:-1] if value.endswith('/') else value
             self._current_bucket, self._current_path = self._parse_bucket(value)
-            self._current_path_with_backslash = self._current_path + '/'
+            self._current_path_with_backslash = add_slash(self._current_path)
 
     @staticmethod
     def get_bucket_region(bucket_name):
@@ -73,43 +76,64 @@ class S3Interface:
         :return:
         """
         return boto3.client('s3').get_bucket_location(Bucket=bucket_name)['LocationConstraint']
+    #
+    # def _detect_type_of_object_summary(self, object_summary_key: str):
+    #     """Inner method for detecting given s3.ObjectSummary's type (file or folder)
+    #     :param object_summary_key: name of object_summary
+    #     :return:
+    #     """
+    #
+    #     if object_summary_key == self._current_path:
+    #         self._isfile = True
+    #     if self._current_path_with_backslash in object_summary_key:
+    #         self._isdir = True
+    #
+    # def _populate_listdir(self, object_summary_key: str):
+    #     """Inner method for populating self._listdir
+    #     :param object_summary_key: name of object summary
+    #     :return:
+    #     """
+    #     split_list = object_summary_key.split(self._current_path_with_backslash, 1)
+    #     if len(split_list) == 2:
+    #         inner_object_name_list = split_list[-1].split('/', 1)
+    #
+    #         if len(inner_object_name_list) == 2:
+    #             # is dictionary
+    #             inner_object_name = inner_object_name_list[0] + '/'
+    #         else:
+    #             # is file
+    #             inner_object_name = inner_object_name_list[0]
+    #
+    #         if inner_object_name != '' and inner_object_name not in self._listdir:
+    #             self._listdir.append(inner_object_name)
 
-    def _detect_type_of_object_summary(self, object_summary_key: str):
-        """Inner method for detecting given s3.ObjectSummary's type (file or folder)
-        :param object_summary_key: name of object_summary
+    def _detect_blob_object_type(self):
+        """Hidden method for detecting given blob object type (file or folder)
         :return:
         """
-
-        if object_summary_key == self._current_path:
+        if self._current_path in self._object_key_list:
             self._isfile = True
-        if self._current_path_with_backslash in object_summary_key:
+            self._object_key_list.remove(self._current_path)
+
+        if self._object_key_list:
             self._isdir = True
 
-    def _populate_listdir(self, object_summary_key: str):
-        """Inner method for populating self._listdir
-        :param object_summary_key: name of object summary
+    def _populate_listdir(self, blob_name):
+        """Appends each blob inner name to self._listdir for bucket case
+        :param blob_name: storage.blob.Blob object
         :return:
         """
-        split_list = object_summary_key.split(self._current_path_with_backslash, 1)
+        split_list = blob_name.split(self._current_path_with_backslash, 1)
         if len(split_list) == 2:
-            inner_object_name_list = split_list[-1].split('/', 1)
+            inner_object_name = add_slash(split_list[0])
+        else:
+            inner_object_name = split_list[0]
 
-            if len(inner_object_name_list) == 2:
-                # is dictionary
-                inner_object_name = inner_object_name_list[0] + '/'
-            else:
-                # is file
-                inner_object_name = inner_object_name_list[0]
+        if inner_object_name not in self._listdir:
+            self._listdir.append(inner_object_name)
 
-            if inner_object_name != '' and inner_object_name not in self._listdir:
-                self._listdir.append(inner_object_name)
-
-    def _analyse_path(self, path: str):
-        """From given path create bucket, object, object_summaries, list and identify object type (file/folder)
-        :param path: full path of file/folder
-        :return:
-        """
-
+    def _init_path(self, path):
+        """Initializes path specific fields"""
         self._isfile = False
         self._isdir = False
         self._listdir = list()
@@ -119,13 +143,29 @@ class S3Interface:
 
         self._bucket = self._s3.Bucket(self._current_bucket)
         self._object = self._bucket.Object(self._current_path)
-        self._object_summary_list = list(self._bucket.objects.filter(Prefix=self._current_path))
+        self._object_summary_list = self._bucket.objects.filter(Prefix=self._current_path)
 
         self._object_key_list = [obj.key for obj in self._object_summary_list]
 
+    def _analyse_path(self, path: str):
+        """From given path create bucket, object, object_summaries, list and identify object type (file/folder)
+        :param path: full path of file/folder
+        :return:
+        """
+        self._init_path(path)
+
+        if self.only_bucket:
+            self._isdir = True
+        else:
+            self._object_key_list = [f.split(self._current_path_with_backslash, 1)[-1] for f in
+                                     self._object_key_list]
+            self._detect_blob_object_type()
+
+        while '' in self._object_key_list:
+            self._object_key_list.remove('')
+
         for key_name in self._object_key_list:
             self._populate_listdir(key_name)
-            self._detect_type_of_object_summary(key_name)
 
         if self._isdir or self._isfile:
             self._object_exists = True
@@ -140,15 +180,24 @@ class S3Interface:
         self._analyse_path(path)
         return self._isdir
 
-    def listdir(self, path: str) -> list:
+    def listdir(self, path: str, recursive: Optional[bool] = False, include_folders: Optional[bool] = False) -> list:
         """Lists content for given folder path"""
         self._analyse_path(path)
+        if recursive:
+            if include_folders:
+                folders = [f for f in self._listdir if f.endswith('/')]
+                result = self._object_key_list + folders
+            else:
+                result = [f for f in self._object_key_list if not f.endswith('/')]
+
+        else:
+            result = self._listdir
         if not self._object_exists:
             raise FileNotFoundError(f'No such file or dictionary: {path}')
         elif not self._isdir:
             raise NotADirectoryError(f"Not a directory: {path}")
 
-        return self._listdir
+        return result
 
     def remove(self, path: str) -> None:
         """Deletes file/folder"""
@@ -205,11 +254,14 @@ class S3Interface:
 
         self._object.put(ACL=acl, Body=content, Metadata=metadata)
 
-    @staticmethod
-    def _parse_bucket(path: str) -> Tuple[str, str]:
+    def _parse_bucket(self, path: str) -> Tuple[str, str]:
         """Given a path, return the bucket name and the file path as a tuple"""
         path = path.split(S3Interface.PREFIX, 1)[-1]
-        bucket_name, path = path.split('/', 1)
+        try:
+            bucket_name, path = path.split('/', 1)
+        except ValueError:
+            bucket_name, path = path.split('/', 1)[0], ''
+            self.only_bucket = True
         return bucket_name, path
 
     def __enter__(self):
@@ -219,4 +271,3 @@ class S3Interface:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._is_open = False
         self.path = None
-
