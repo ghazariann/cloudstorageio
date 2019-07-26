@@ -207,3 +207,8 @@ class CloudInterface:
                 to_full = os.path.join(to_path, f)
                 logger.info(f'Copied {from_full} file to {to_full}')
                 self.copy(from_full, to_full)
+
+
+if __name__ == '__main__':
+    ci = CloudInterface()
+    print(ci.listdir('gs://test-cloudstorageio'))

@@ -10,6 +10,7 @@
 """
 
 import io
+import os
 from typing import Tuple, Union, Optional
 from google.cloud import storage
 
@@ -24,6 +25,14 @@ class GoogleStorageInterface:
         """Initializes GoogleStorageInterface instance, creates storage client
         :param kwargs:
         """
+
+        self.creds = kwargs.pop('google_credentials_json_path', None)
+        if self.creds:
+            os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = self.creds
+        if 'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ.keys():
+            raise ConnectionRefusedError("Please add GOOGLE_APPLICATION_CREDENTIALS environment variable"
+                                         " or set google_credentials_json_path")
+
         self._encoding = 'utf8'
         self._mode = None
         self._current_bucket = None
