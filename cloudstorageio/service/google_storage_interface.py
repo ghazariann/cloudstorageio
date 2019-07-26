@@ -115,6 +115,9 @@ class GoogleStorageInterface:
             self._blob_key_names_list = [f.split(self._current_path_with_backslash, 1)[-1] for f in self._blob_key_names_list]
             self._detect_blob_object_type()
 
+        while '' in self._blob_key_names_list:
+            self._blob_key_names_list.remove('')
+
         for blob in self._blob_key_names_list:
             self._populate_listdir(blob)
 
@@ -131,18 +134,19 @@ class GoogleStorageInterface:
         self._analyse_path(path)
         return self._isdir
 
-    def listdir(self, path: str, recursive: Optional[bool] = False, include_recursive_folders: Optional[bool] = False) -> list:
+    def listdir(self, path: str, recursive: Optional[bool] = False, include_folders: Optional[bool] = False) -> list:
         """Checks given dictionary's existence and lists content
         :param path: full path of gs object (file/folder)
         :param recursive: list content fully
-        :param include_recursive_folders:
+        :param include_folders:
         :return:
         """
         self._analyse_path(path)
 
         if recursive:
-            if include_recursive_folders:
-                result = self._blob_key_names_list
+            if include_folders:
+                folders = [f for f in self._listdir if f.endswith('/')]
+                result = self._blob_key_names_list + folders
             else:
                 result = [f for f in self._blob_key_names_list if not f.endswith('/')]
         else:
@@ -229,3 +233,8 @@ class GoogleStorageInterface:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._is_open = False
         self.path = None
+
+
+if __name__ == '__main__':
+    gs = GoogleStorageInterface()
+    print(gs.listdir('gs://test-cloudstorageio/v'))

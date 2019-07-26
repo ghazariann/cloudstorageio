@@ -145,10 +145,11 @@ class CloudInterface:
         self._reset_fields()
         return res
 
-    def listdir(self, path: str, recursive: Optional[bool] = False):
+    def listdir(self, path: str, recursive: Optional[bool] = False, include_folders_recursive: Optional[bool] = False):
         """Lists all files/folders containing in given folder path"""
         self.identify_path_type(path)
-        res = self._current_storage.listdir(path, recursive)
+        res = self._current_storage.listdir(path=path, recursive=recursive,
+                                            include_recursive_folders=include_folders_recursive)
         self._reset_fields()
         return res
 
@@ -211,4 +212,5 @@ class CloudInterface:
 
 if __name__ == '__main__':
     ci = CloudInterface()
-    print(ci.listdir('gs://test-cloudstorageio'))
+
+    print(ci.listdir('dbx://test-cloudstorageio', recursive=True))
