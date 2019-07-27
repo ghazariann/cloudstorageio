@@ -233,8 +233,3 @@ class GoogleStorageInterface:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._is_open = False
         self.path = None
-
-
-if __name__ == '__main__':
-    gs = GoogleStorageInterface()
-    print(gs.listdir('gs://test-cloudstorageio/v'))

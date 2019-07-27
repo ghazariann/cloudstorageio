@@ -152,10 +152,10 @@ class DropBoxInterface:
         self._analyse_path(path)
         return self._isdir
 
-    def listdir(self, path: str, recursive: Optional[bool] = False, include_recursive_folders: Optional[bool] = False):
+    def listdir(self, path: str, recursive: Optional[bool] = False, include_folders: Optional[bool] = False):
         """Lists content for given folder path"""
         self.list_recursive = recursive
-        self.include_folders = include_recursive_folders
+        self.include_folders = include_folders
         self._analyse_path(path)
 
         if not self._object_exists:

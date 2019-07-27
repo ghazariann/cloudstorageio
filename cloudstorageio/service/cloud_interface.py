@@ -149,7 +149,7 @@ class CloudInterface:
         """Lists all files/folders containing in given folder path"""
         self.identify_path_type(path)
         res = self._current_storage.listdir(path=path, recursive=recursive,
-                                            include_recursive_folders=include_folders_recursive)
+                                            include_folders=include_folders_recursive)
         self._reset_fields()
         return res
 
@@ -208,9 +208,3 @@ class CloudInterface:
                 to_full = os.path.join(to_path, f)
                 logger.info(f'Copied {from_full} file to {to_full}')
                 self.copy(from_full, to_full)
-
-
-if __name__ == '__main__':
-    ci = CloudInterface()
-
-    print(ci.listdir('dbx://test-cloudstorageio', recursive=True))

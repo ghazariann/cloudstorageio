@@ -130,12 +130,12 @@ class LocalStorageInterface:
         else:
             raise FileNotFoundError(f'No such file or dictionary: {path}')
 
-    def listdir(self, path: str, recursive: Optional[bool] = False, include_recursive_folders: Optional[bool] = False):
+    def listdir(self, path: str, recursive: Optional[bool] = False, include_folders: Optional[bool] = False):
         """Lists all files/folders of dictionary"""
 
         self._analyse_path(path)
         self.recursive = recursive
-        self.include_folders = include_recursive_folders
+        self.include_folders = include_folders
 
         if not self._isdir and not self._isfile:
             raise FileNotFoundError(f'No such file or dictionary: {self.path}')
