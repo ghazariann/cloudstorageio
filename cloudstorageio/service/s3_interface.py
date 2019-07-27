@@ -76,36 +76,6 @@ class S3Interface:
         :return:
         """
         return boto3.client('s3').get_bucket_location(Bucket=bucket_name)['LocationConstraint']
-    #
-    # def _detect_type_of_object_summary(self, object_summary_key: str):
-    #     """Inner method for detecting given s3.ObjectSummary's type (file or folder)
-    #     :param object_summary_key: name of object_summary
-    #     :return:
-    #     """
-    #
-    #     if object_summary_key == self._current_path:
-    #         self._isfile = True
-    #     if self._current_path_with_backslash in object_summary_key:
-    #         self._isdir = True
-    #
-    # def _populate_listdir(self, object_summary_key: str):
-    #     """Inner method for populating self._listdir
-    #     :param object_summary_key: name of object summary
-    #     :return:
-    #     """
-    #     split_list = object_summary_key.split(self._current_path_with_backslash, 1)
-    #     if len(split_list) == 2:
-    #         inner_object_name_list = split_list[-1].split('/', 1)
-    #
-    #         if len(inner_object_name_list) == 2:
-    #             # is dictionary
-    #             inner_object_name = inner_object_name_list[0] + '/'
-    #         else:
-    #             # is file
-    #             inner_object_name = inner_object_name_list[0]
-    #
-    #         if inner_object_name != '' and inner_object_name not in self._listdir:
-    #             self._listdir.append(inner_object_name)
 
     def _detect_blob_object_type(self):
         """Hidden method for detecting given blob object type (file or folder)
