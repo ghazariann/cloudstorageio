@@ -16,9 +16,8 @@ from cloudstorageio.utils.logger import logger
 
 
 class LocalStorageInterface:
-    PREFIX = "lc:/"
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         self._mode = None
         self.path = None
         self.recursive = False
@@ -38,8 +37,7 @@ class LocalStorageInterface:
             self._current_path = None
             self._current_path_with_backslash = None
         else:
-            value = value.split(self.PREFIX, 1)[-1]
-            self._current_path = value[:-1] if value.endswith('/') else value
+            self._current_path = value[:-1] if (value.endswith('/') and value != '/') else value
             self._current_path_with_backslash = add_slash(self._current_path)
 
     def _populate_listdir(self):
@@ -50,7 +48,8 @@ class LocalStorageInterface:
                     self._listdir.append(os.path.join(root, name).split(self._current_path_with_backslash, 1)[1])
                 if self.include_folders:
                     for name in dirs:
-                        self._listdir.append((os.path.join(root, name).split(self._current_path_with_backslash, 1)[1]) + '/')
+                        self._listdir.append(str(os.path.join(root, name).split(self._current_path_with_backslash, 1)[1])
+                                             + '/')
         else:
             for i in os.listdir(self.path):
                 if os.path.isdir(os.path.join(self.path, i)):
@@ -87,7 +86,7 @@ class LocalStorageInterface:
             res = f.read()
         return res
 
-    def write(self, content: Union[str, bytes, io.IOBase]):
+    def write(self, content: Union[str, bytes]):
         """ Writes text to a file on google storage
         :param content: The content that should be written to a file
         :return: String content of the file specified in the file path argument

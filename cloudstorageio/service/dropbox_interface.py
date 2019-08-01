@@ -31,7 +31,7 @@ class DropBoxInterface:
         """
         # try to find token from given kwargs arguments or from os environment
         self.token = kwargs.pop('dropbox_token', None)
-        self.root = kwargs.pop('dropbox_root')
+        self.root = kwargs.pop('dropbox_root', None)
 
         if not self.token:
             self.token = os.environ.get('DROPBOX_TOKEN')
@@ -172,8 +172,8 @@ class DropBoxInterface:
 
         self.dbx.files_delete(self.path)
 
-    def open(self, path: str, mode: Optional[str] = None, *args, **kwargs):
-        """Opens a file from dropbox and returns the DropBoxInterface object"""
+    def open(self, path: str, mode: Optional[str] = None):
+        """Opens a file from dropBox and returns the DropBoxInterface object"""
         self._mode = mode
         self._analyse_path(path)
 

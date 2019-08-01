@@ -8,7 +8,9 @@
                                 remove method for removing file/folder
                                 copy method for copying file from one storage to another
 """
+import enum
 import functools
+import io
 import multiprocessing
 import os
 from multiprocessing.pool import Pool
@@ -24,6 +26,11 @@ from cloudstorageio.utils.logger import logger
 
 
 class CloudInterface:
+
+    class PrefixEnums(enum.Enum):
+        S3 = 's3://'
+        GOOGLE_CLOUD = 'gs://'
+        DROPBOX = 'dbx://'
 
     def __init__(self, aws_region_name: Optional[str] = None, aws_access_key_id: Optional[str] = None,
                  aws_secret_access_key: Optional[str] = None, dropbox_token: Optional[str] = None,
@@ -46,17 +53,6 @@ class CloudInterface:
         self._kwargs['dropbox_root'] = dropbox_root
         self._kwargs['google_credentials_json_path'] = google_credentials_json_path
 
-        self._filename = None
-        self._mode = None
-        self._s3 = None
-        self._gs = None
-        self._local = None
-        self._dbx = None
-        self._current_storage = None
-        self._path = None
-
-    def _reset_fields(self):
-        """Set all instance attributes to none"""
         self._filename = None
         self._mode = None
         self._s3 = None
@@ -95,33 +91,60 @@ class CloudInterface:
             self._current_storage = self._dbx
         else:
             raise ValueError(f"`{path}` is invalid. Please use dbx:// prefix for dropBox, s3:// for S3 storage, "
-                             f" gs:// for Google Cloud Storage and lc:// for your local path")
+                             f" gs:// for Google Cloud Storage or valid local path")
+
+    def _reset_fields(self):
+        """Set all instance attributes to none"""
+        self._filename = None
+        self._mode = None
+        self._s3 = None
+        self._gs = None
+        self._local = None
+        self._dbx = None
+        self._current_storage = None
+        self._path = None
 
     @staticmethod
     def is_local_path(path: str) -> bool:
         """Checks if the given path is for local storage"""
-        return path.startswith(LocalStorageInterface.PREFIX)
+        is_dir = False
+        path = path.strip()
+        while not is_dir and path != '':
+            is_dir = os.path.isdir(path)
+            path = os.path.dirname(path)
+        return is_dir
 
-    @staticmethod
-    def is_s3_path(path: str) -> bool:
+    @classmethod
+    def is_s3_path(cls, path: str) -> bool:
         """Checks if the given path is for S3 storage"""
-        return path.startswith(S3Interface.PREFIX)
+        return path.strip().startswith(cls.PrefixEnums.S3.value)
 
-    @staticmethod
-    def is_google_storage_path(path: str) -> bool:
+    @classmethod
+    def is_google_storage_path(cls, path: str) -> bool:
         """Checks if the given path is for google storage"""
-        return path.startswith(GoogleStorageInterface.PREFIX)
+        return path.strip().startswith(cls.PrefixEnums.GOOGLE_CLOUD.value)
 
-    @staticmethod
-    def is_dropbox_path(path: str) -> bool:
+    @classmethod
+    def is_dropbox_path(cls, path: str) -> bool:
         """Checks if the given path is for dropBox"""
-        return path.startswith(DropBoxInterface.PREFIX)
+        return path.strip().startswith(cls.PrefixEnums.DROPBOX.value)
 
     def open(self, file_path: str, mode: Optional[str] = 'rt', *args, **kwargs) -> Callable:
         """Identifies given file path and return "open" method for detected current storage"""
         self.identify_path_type(file_path)
         res = self._current_storage.open(path=file_path, mode=mode, *args, **kwargs)
         self._reset_fields()
+        return res
+
+    def save(self, path: str, content):
+        """Save content to given file"""
+        with self.open(path, 'wb') as f:
+            f.write(content)
+
+    def fetch(self, path: str) -> bytes:
+        """Fetch data of given file"""
+        with self.open(path, 'rb') as f:
+            res = f.read()
         return res
 
     def isfile(self, path: str) -> Callable:

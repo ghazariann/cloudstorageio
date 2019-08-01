@@ -178,7 +178,7 @@ class S3Interface:
         for obj in self._object_summary_list:
             obj.delete()
 
-    def open(self, path: str, mode: Optional[str] = None, *args, **kwargs):
+    def open(self, path: str, mode: Optional[str] = None):
         """Opens a file from s3 and return the S3Interface object"""
         self._mode = mode
         self._analyse_path(path)
