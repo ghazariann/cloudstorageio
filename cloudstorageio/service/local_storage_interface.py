@@ -6,7 +6,6 @@
                                         listdir method for listing folder's content
                                         remove method for removing file or folder
 """
-import io
 import os
 import shutil
 from typing import Optional, Union
