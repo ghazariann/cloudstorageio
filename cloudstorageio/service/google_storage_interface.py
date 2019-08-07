@@ -97,6 +97,7 @@ class GoogleStorageInterface:
 
         self.path = path
         self._bucket = self._storage_client.get_bucket(self._current_bucket)
+
         self._blob_objects = self._bucket.list_blobs(prefix=self._current_path)
 
         self._blob_key_names_list = [obj.name for obj in self._blob_objects]
@@ -112,8 +113,9 @@ class GoogleStorageInterface:
         if self.only_bucket:
             self._isdir = True
         else:
-            self._blob_key_names_list = [f.split(self._current_path_with_backslash, 1)[-1] for f in self._blob_key_names_list]
             self._detect_blob_object_type()
+            self._blob_key_names_list = [f.split(self._current_path_with_backslash, 1)[1] for f in self._blob_key_names_list
+                                         if len(f.split(self._current_path_with_backslash, 1)) == 2]
 
         while '' in self._blob_key_names_list:
             self._blob_key_names_list.remove('')
