@@ -26,7 +26,7 @@ class GoogleStorageInterface:
         :param kwargs:
         """
 
-        self.creds = kwargs.pop('google_credentials_json_path', None)
+        self.creds = kwargs.pop('google_cloud_credentials_path', None)
         if self.creds:
             os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = self.creds
         if 'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ.keys():

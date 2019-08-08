@@ -1,0 +1,15 @@
+client_config_backend: file
+client_config_file: /home/vahagn/Dropbox/cognaize_docs/google_drive_client_secret.json
+client_config:
+    client_id: <your_client_id>
+    client_secret: <your_secret>
+
+save_credentials: True
+save_credentials_backend: file
+save_credentials_file: /home/vahagn/dev/workspace/my_projects/cloudstorageio/cloudstorageio/configs/credentials.json
+
+get_refresh_token: True
+
+oauth_scope:
+    - https://www.googleapis.com/auth/drive
+    - https://www.googleapis.com/auth/drive.install

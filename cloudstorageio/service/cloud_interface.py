@@ -19,6 +19,8 @@ from cloudstorageio.service.google_storage_interface import GoogleStorageInterfa
 from cloudstorageio.service.local_storage_interface import LocalStorageInterface
 from cloudstorageio.service.s3_interface import S3Interface
 from cloudstorageio.service.dropbox_interface import DropBoxInterface
+from cloudstorageio.service.google_drive_interface import GoogleDriveInterface
+
 
 from typing import Optional, Callable
 
@@ -31,17 +33,20 @@ class CloudInterface:
         S3 = 's3://'
         GOOGLE_CLOUD = 'gs://'
         DROPBOX = 'dbx://'
+        DRIVE = 'dr://'
 
     def __init__(self, aws_region_name: Optional[str] = None, aws_access_key_id: Optional[str] = None,
                  aws_secret_access_key: Optional[str] = None, dropbox_token: Optional[str] = None,
-                 dropbox_root: Optional[bool] = False, google_credentials_json_path: Optional[str] = None, **kwargs):
+                 dropbox_root: Optional[bool] = True, google_cloud_credentials_path: Optional[str] = None,
+                 google_drive_credentials_path: Optional[str] = None, **kwargs):
 
         """Initializes CloudInterface instance
         :param aws_region_name: region name for S3 storage
         :param aws_access_key_id: access key id for S3 storage
         :param aws_secret_access_key: secret access key for S3 storage
         :param dropbox_token: generated token for dropbox app access
-        :param google_credentials_json_path: local path of google credentials file (json)
+        :param google_cloud_credentials_path: local path of google cloud credentials file (json)
+        :param google_drive_credentials_path: local path of google drive secret credentials file (json)
         :param kwargs:
         """
 
@@ -51,7 +56,8 @@ class CloudInterface:
         self._kwargs['aws_secret_access_key'] = aws_secret_access_key
         self._kwargs['dropbox_token'] = dropbox_token
         self._kwargs['dropbox_root'] = dropbox_root
-        self._kwargs['google_credentials_json_path'] = google_credentials_json_path
+        self._kwargs['google_cloud_credentials_path'] = google_cloud_credentials_path
+        self._kwargs['google_drive_credentials_path'] = google_drive_credentials_path
 
         self._filename = None
         self._mode = None
@@ -59,6 +65,7 @@ class CloudInterface:
         self._gs = None
         self._local = None
         self._dbx = None
+        self._dr = None
         self._current_storage = None
         self._path = None
 
@@ -89,6 +96,11 @@ class CloudInterface:
             if self._dbx is None:
                 self._dbx = DropBoxInterface(**self._kwargs)
             self._current_storage = self._dbx
+
+        elif self.is_drive_path(self._path):
+            if self._dr is None:
+                self._dr = GoogleDriveInterface(**self._kwargs)
+            self._current_storage = self._dr
         else:
             raise ValueError(f"`{path}` is invalid. Please use dbx:// prefix for dropBox, s3:// for S3 storage, "
                              f" gs:// for Google Cloud Storage or valid local path")
@@ -101,6 +113,7 @@ class CloudInterface:
         self._gs = None
         self._local = None
         self._dbx = None
+        self._dr = None
         self._current_storage = None
         self._path = None
 
@@ -128,6 +141,11 @@ class CloudInterface:
     def is_dropbox_path(cls, path: str) -> bool:
         """Checks if the given path is for dropBox"""
         return path.strip().startswith(cls.PrefixEnums.DROPBOX.value)
+
+    @classmethod
+    def is_drive_path(cls, path: str) -> bool:
+        """Checks if the given path is for google drive"""
+        return path.strip().startswith(cls.PrefixEnums.DRIVE.value)
 
     def open(self, file_path: str, mode: Optional[str] = 'rt', *args, **kwargs) -> Callable:
         """Identifies given file path and return "open" method for detected current storage"""
@@ -231,3 +249,30 @@ class CloudInterface:
                 to_full = os.path.join(to_path, f)
                 logger.info(f'Copied {from_full} file to {to_full}')
                 self.copy(from_full, to_full)
+
+
+if __name__ == '__main__':
+    dbx_token = 'g9JcHjx4_tAAAAAAAAAAf0zla0LXQ7r2WH00tsImIDj34mF7t9lb8XVMHx7spelj'
+    ci = CloudInterface(dropbox_token=dbx_token)
+    local_folder_path = '/home/vahagn/Desktop/gs_to_drop/batches/Deals'
+
+    dbx_excel = 'dbx://ELEMENTS/data_storage/compliance_engine_data/EXCEL_DATA_FILES'
+    dbx_reports = 'dbx://ELEMENTS/data_storage/compliance_engine_data/REPORTS'
+    dbx_docs = 'dbx://ELEMENTS/data_storage/compliance_engine_data/DOCS'
+
+
+    ci.copy(from_path='/home/vahagn/Desktop/gs_to_drop/batches/Deals/Dryden 36/2nd Reset/GS_Dryden 36 Reset - Final Offering Memorandum (as printed).pdf', to_path='dbx://ELEMENTS/data_storage/compliance_engine_data/REPORTS/GS_Dryden 36 Reset - Final Offering Memorandum (as printed)(2nd Reset).pdf')
+
+    # for file in os.listdir('/home/vahagn/Desktop/gs_to_drop/batches/Deals/Dryden 36/2nd Reset'):
+    #     full_file_path = os.path.join('/home/vahagn/Desktop/gs_to_drop/batches/Deals/Dryden 36/2nd Reset', file)
+    #     if full_file_path.endswith(('.xlsx', '.xls')):
+    #         ci.copy(from_path=full_file_path, to_path=os.path.join(dbx_excel, file))
+    #
+    #     elif full_file_path.endswith('.pdf'):
+    #         ci.copy(from_path=full_file_path, to_path=os.path.join(dbx_reports, file))
+    #
+    #     elif full_file_path.endswith(('.docx', '.DOCX')):
+    #         ci.copy(from_path=full_file_path, to_path=os.path.join(dbx_docs, file))
+    #
+    #     else:
+    #         print(file)
