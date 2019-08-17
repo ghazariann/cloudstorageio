@@ -118,9 +118,6 @@ class DropBoxInterface:
         except ValueError:
             pass
 
-        # except (ApiError, ValidationError):
-        #     pass
-
     def _init_path(self, path):
         """Initializes path specific fields"""
         self._isfile = False

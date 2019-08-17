@@ -17,7 +17,7 @@ logging.getLogger('googleapiclient.discovery_cache').setLevel(logging.ERROR)
 
 
 class GoogleDriveInterface:
-    PREFIX = 'dr://'
+    PREFIX = 'gdrive://'
 
     mimetypes_changes = {
         'application/vnd.google-apps.document': 'text/plain',
@@ -282,7 +282,7 @@ class GoogleDriveInterface:
         self._is_open = False
         self.path = None
 
-
+# TEST
 @timer
 def main():
     configs = '/home/vahagn/Dropbox/cognaize_docs/google_drive_client_secret.json'
@@ -291,6 +291,3 @@ def main():
 
     path = dr.listdir('1GhNthsaKrsVWaSHUt2bhyjt81PwummOh')
 
-
-if __name__ == '__main__':
-    main()

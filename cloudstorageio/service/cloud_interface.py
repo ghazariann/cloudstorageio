@@ -10,7 +10,6 @@
 """
 import enum
 import functools
-import io
 import multiprocessing
 import os
 from multiprocessing.pool import Pool
@@ -33,7 +32,7 @@ class CloudInterface:
         S3 = 's3://'
         GOOGLE_CLOUD = 'gs://'
         DROPBOX = 'dbx://'
-        DRIVE = 'dr://'
+        DRIVE = 'gdrive://'
 
     def __init__(self, aws_region_name: Optional[str] = None, aws_access_key_id: Optional[str] = None,
                  aws_secret_access_key: Optional[str] = None, dropbox_token: Optional[str] = None,
@@ -102,8 +101,9 @@ class CloudInterface:
                 self._dr = GoogleDriveInterface(**self._kwargs)
             self._current_storage = self._dr
         else:
-            raise ValueError(f"`{path}` is invalid. Please use dbx:// prefix for dropBox, s3:// for S3 storage, "
-                             f" gs:// for Google Cloud Storage or valid local path")
+            raise ValueError(f"`{path}` is invalid. Please use {self.PrefixEnums.DROPBOX.value} prefix for dropBox,"
+                             f" {self.PrefixEnums.S3.value} for S3 storage, "
+                             f" {self.PrefixEnums.GOOGLE_CLOUD.value} for Google Cloud Storage or VALID local path")
 
     def _reset_fields(self):
         """Set all instance attributes to none"""
@@ -249,30 +249,3 @@ class CloudInterface:
                 to_full = os.path.join(to_path, f)
                 logger.info(f'Copied {from_full} file to {to_full}')
                 self.copy(from_full, to_full)
-
-
-if __name__ == '__main__':
-    dbx_token = 'g9JcHjx4_tAAAAAAAAAAf0zla0LXQ7r2WH00tsImIDj34mF7t9lb8XVMHx7spelj'
-    ci = CloudInterface(dropbox_token=dbx_token)
-    local_folder_path = '/home/vahagn/Desktop/gs_to_drop/batches/Deals'
-
-    dbx_excel = 'dbx://ELEMENTS/data_storage/compliance_engine_data/EXCEL_DATA_FILES'
-    dbx_reports = 'dbx://ELEMENTS/data_storage/compliance_engine_data/REPORTS'
-    dbx_docs = 'dbx://ELEMENTS/data_storage/compliance_engine_data/DOCS'
-
-
-    ci.copy(from_path='/home/vahagn/Desktop/gs_to_drop/batches/Deals/Dryden 36/2nd Reset/GS_Dryden 36 Reset - Final Offering Memorandum (as printed).pdf', to_path='dbx://ELEMENTS/data_storage/compliance_engine_data/REPORTS/GS_Dryden 36 Reset - Final Offering Memorandum (as printed)(2nd Reset).pdf')
-
-    # for file in os.listdir('/home/vahagn/Desktop/gs_to_drop/batches/Deals/Dryden 36/2nd Reset'):
-    #     full_file_path = os.path.join('/home/vahagn/Desktop/gs_to_drop/batches/Deals/Dryden 36/2nd Reset', file)
-    #     if full_file_path.endswith(('.xlsx', '.xls')):
-    #         ci.copy(from_path=full_file_path, to_path=os.path.join(dbx_excel, file))
-    #
-    #     elif full_file_path.endswith('.pdf'):
-    #         ci.copy(from_path=full_file_path, to_path=os.path.join(dbx_reports, file))
-    #
-    #     elif full_file_path.endswith(('.docx', '.DOCX')):
-    #         ci.copy(from_path=full_file_path, to_path=os.path.join(dbx_docs, file))
-    #
-    #     else:
-    #         print(file)
