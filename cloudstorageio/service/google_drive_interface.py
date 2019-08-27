@@ -9,7 +9,7 @@ from googleapiclient.errors import HttpError
 
 from cloudstorageio.utils.interface import add_slash
 from cloudstorageio.utils.logger import logger
-from cloudstorageio.utils.timer import timer
+from cloudstorageio.utils.decorators import timer
 
 
 # avoiding dependencies' warning
