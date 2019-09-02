@@ -8,12 +8,14 @@
                                 remove method for removing file/folder
                                 copy method for copying file from one storage to another
 """
+import sys
+# sys.settrace()
+
 import enum
 import functools
 import multiprocessing
 import os
 from multiprocessing.pool import Pool
-
 from cloudstorageio.service.google_storage_interface import GoogleStorageInterface
 from cloudstorageio.service.local_storage_interface import LocalStorageInterface
 from cloudstorageio.service.s3_interface import S3Interface
@@ -23,6 +25,7 @@ from cloudstorageio.service.google_drive_interface import GoogleDriveInterface
 
 from typing import Optional, Callable
 
+from cloudstorageio.utils.decorators import timer
 from cloudstorageio.utils.logger import logger
 
 
@@ -216,16 +219,18 @@ class CloudInterface:
         try:
             full_from_path = os.path.join(from_path, p)
             full_to_path = os.path.join(to_path, p)
-            logger.info(f'Copying {full_from_path} file to {full_to_path}')
             self.copy(from_path=full_from_path, to_path=full_to_path)
+            logger.info(f'Copied {full_from_path} file to {full_to_path}')
+
         except Exception as e:
             logger.info(e, p)
 
+    @timer
     def copy_batch(self, from_path: str, to_path: str, multiprocess: Optional[bool] = True,
                    continue_copy: Optional[bool] = False):
-        """ Copy entire batch(folder) to other destination
-        :param from_path: folder/bucket to copy
-        :param to_path: name of folder to create
+        """ Copy entire batch(folder) to new destination
+        :param from_path: folder/bucket to copy from
+        :param to_path: name of folder to copy files
         :param multiprocess: indicator of doing process with multiprocess(faster) or with simple for loop
         :param continue_copy:
         :return:

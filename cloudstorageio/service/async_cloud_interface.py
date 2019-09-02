@@ -1,10 +1,12 @@
+import itertools
 import os
 import queue
 
 from typing import Optional
 from threading import Thread
 from cloudstorageio import CloudInterface
-from cloudstorageio.utils.timer import timer
+from cloudstorageio.utils.decorators import timer
+from cloudstorageio.utils.logger import logger
 
 
 class AsyncCloudInterface:
@@ -33,11 +35,11 @@ class AsyncCloudInterface:
         self.google_cloud_credentials_path = google_cloud_credentials_path
         self.google_drive_credentials_path = google_drive_credentials_path
 
-    def read_files(self, file_list: list, q: queue.Queue, from_folder_path: str):
-        """
-        :param file_list:
-        :param q:
-        :param from_folder_path:
+    def read_files(self, file_path_list: list, q: queue.Queue, from_folder_path: str):
+        """Reads given files and put content in given queue
+        :param file_path_list: list of files' path
+        :param q: queue which contains file path and file content
+        :param from_folder_path: folder path of files to read
         :return:
         """
         ci = CloudInterface(aws_region_name=self.aws_region_name, aws_access_key_id=self.aws_access_key_id,
@@ -46,16 +48,16 @@ class AsyncCloudInterface:
                             google_cloud_credentials_path=self.google_cloud_credentials_path,
                             google_drive_credentials_path=self.google_drive_credentials_path)
 
-        for file_path in file_list:
+        for file_path in file_path_list:
             q.put((file_path, ci.fetch(os.path.join(from_folder_path, file_path))))
-            print("Read file {} \n".format(file_path))
 
         q.put(('', ''))
 
-    def write_files(self, q: queue.Queue, to_folder_path: str):
-        """
-        :param q:
-        :param to_folder_path:
+    def write_files(self, q: queue.Queue, from_folder_path: str, to_folder_path: str):
+        """Writes given file contents to new files
+        :param q: queue which contains file path and file content
+        :param from_folder_path:folder path of already read files
+        :param to_folder_path: folder path of files to write
         :return:
         """
         while True:
@@ -66,27 +68,42 @@ class AsyncCloudInterface:
                                 google_drive_credentials_path=self.google_drive_credentials_path)
 
             file_path, content = q.get(block=True)
+            # Use Enum for identifying queue progress
             if not file_path:
                 break
 
-            ci.save(os.path.join(to_folder_path, file_path), content)
-            print("Wrote file {} \n".format(file_path))
+            to_file_path = os.path.join(to_folder_path, file_path)
+            ci.save(to_file_path, content)
+            logger.info(f"Copied file {os.path.join(from_folder_path, file_path)} to {to_file_path}")
             q.task_done()
 
     @staticmethod
-    def chunk_iterable(seq, num):
-        avg = len(seq) / float(num)
-        out = []
-        last = 0.0
+    def get_chunk(seq: list, n_chunks: int) -> list:
+        """
+        Divides given sequence to n chunks
+        """
+        seq_size = len(seq)
+        result_list = list()
+        if n_chunks > seq_size:
+            raise ValueError(f"The number of chunks ({n_chunks}) exceeds the"
+                             f" length of the sequence ({seq_size})")
 
-        while last < len(seq):
-            out.append(seq[int(last):int(last + avg)])
-            last += avg
+        [result_list.append([]) for _ in range(n_chunks)]
+        for idx, chunk in enumerate(itertools.cycle(result_list)):
+            if idx == seq_size:
+                break
+            chunk.append(seq[idx])
 
-        return out
+        return result_list
 
     @timer
     def copy_batch(self, from_folder_path: str, to_folder_path: str, process_amount: int = 10):
+        """ Asynchronous copy entire batch(folder) to new destination
+        :param from_folder_path: folder/bucket to copy from
+        :param to_folder_path: name of folder to copy files
+        :param process_amount:
+        :return:
+        """
 
         ci = CloudInterface(aws_region_name=self.aws_region_name, aws_access_key_id=self.aws_access_key_id,
                             aws_secret_access_key=self.aws_secret_access_key, dropbox_token=self.dropbox_token,
@@ -96,20 +113,15 @@ class AsyncCloudInterface:
 
         files_list = ci.listdir(from_folder_path, recursive=True)
 
-        # print('listed')
-        # if not process_amount:
-        #     process_amount = len(files_list) / 2
         if process_amount > len(files_list):
             process_amount = len(files_list)
 
-        chunks = self.chunk_iterable(files_list, process_amount)
+        chunks = self.get_chunk(files_list, process_amount)
 
         read_threads = []
         write_threads = []
 
         for chunk in chunks:
-            # if chunk:
-
             q = queue.Queue()
 
             read_thread = Thread(target=self.read_files,
@@ -117,14 +129,13 @@ class AsyncCloudInterface:
 
             read_threads.append(read_thread)
 
-            write_thread = Thread(target=self.write_files, args=(q, to_folder_path))
+            write_thread = Thread(target=self.write_files, args=(q, from_folder_path, to_folder_path))
             write_threads.append(write_thread)
 
             read_thread.start()
             write_thread.start()
 
-        # q.join()
-
+        # join all opened threads
         for r, w in zip(read_threads, write_threads):
             r.join()
             w.join()
