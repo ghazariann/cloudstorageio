@@ -14,7 +14,7 @@ import os
 from typing import Tuple, Union, Optional
 from google.cloud import storage
 
-from cloudstorageio.utils.interface import add_slash
+from cloudstorageio.utils.interface_functions import add_slash
 from cloudstorageio.utils.logger import logger
 
 

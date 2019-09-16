@@ -19,7 +19,7 @@ from dropbox.exceptions import ApiError
 from dropbox.stone_validators import ValidationError
 
 from cloudstorageio.utils.logger import logger
-from cloudstorageio.utils.interface import add_slash
+from cloudstorageio.utils.interface_functions import add_slash
 
 
 class DropBoxInterface:
@@ -88,6 +88,13 @@ class DropBoxInterface:
         if isinstance(self.metadata, FolderMetadata):
             self._isdir = True
 
+        if self._isdir or self._isfile:
+            self._object_exists = True
+
+            if self.metadata.path_display != self.path and self.metadata.path_lower == self.path.lower():
+                raise KeyError(f'DropBox case-insensitivity conflict: The given  {self.path} is the same file/folder as'
+                               f' {self.metadata.path_display} that already exists')
+
     def _populate_listdir(self):
         """Appends each file.folder name to self._listdir"""
 
@@ -98,7 +105,7 @@ class DropBoxInterface:
                 except IndexError:
                     full_path = ''
                 if isinstance(f, FolderMetadata):
-                    if self.include_folders:
+                    if not self.list_recursive or self.include_folders:
                         self._listdir.append((add_slash(full_path)))
                 else:
                     self._listdir.append(full_path)
@@ -118,8 +125,9 @@ class DropBoxInterface:
         except ValueError:
             pass
 
-    def _init_path(self, path):
-        """Initializes path specific fields"""
+    def _analyse_path(self, path: str):
+        """From given path lists and detects object type (file/folder)"""
+
         self._isfile = False
         self._isdir = False
         self._listdir = list()
@@ -127,17 +135,8 @@ class DropBoxInterface:
         self._write_mode = None
 
         self.path = path
+
         self._detect_path_type()
-
-    def _analyse_path(self, path: str):
-        """From given path lists and detects object type (file/folder)"""
-
-        self._init_path(path)
-
-        if self._isdir:
-            self._populate_listdir()
-        if self._isdir or self._isfile:
-            self._object_exists = True
 
     def isfile(self, path: str):
         """Checks file existence for given path"""
@@ -154,6 +153,8 @@ class DropBoxInterface:
         self.list_recursive = recursive
         self.include_folders = include_folders
         self._analyse_path(path)
+        if self._isdir:
+            self._populate_listdir()
 
         if not self._object_exists:
             raise FileNotFoundError(f'No such file or dictionary: {path}')
@@ -182,6 +183,7 @@ class DropBoxInterface:
         :param metadata:
         :return: String content of the file specified in the file path argument
         """
+
         if self._isfile:
             self._write_mode = WriteMode.overwrite
             logger.info('Overwriting {} file'.format(self.path))

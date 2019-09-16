@@ -8,24 +8,21 @@
                                 remove method for removing file/folder
                                 copy method for copying file from one storage to another
 """
-import sys
-# sys.settrace()
-
 import enum
 import functools
 import multiprocessing
 import os
 from multiprocessing.pool import Pool
+from typing import Optional, Callable
+
 from cloudstorageio.service.google_storage_interface import GoogleStorageInterface
 from cloudstorageio.service.local_storage_interface import LocalStorageInterface
 from cloudstorageio.service.s3_interface import S3Interface
 from cloudstorageio.service.dropbox_interface import DropBoxInterface
 from cloudstorageio.service.google_drive_interface import GoogleDriveInterface
 
-
-from typing import Optional, Callable
-
 from cloudstorageio.utils.decorators import timer
+from cloudstorageio.utils.interface_functions import path_formatter
 from cloudstorageio.utils.logger import logger
 
 
@@ -39,7 +36,7 @@ class CloudInterface:
 
     def __init__(self, aws_region_name: Optional[str] = None, aws_access_key_id: Optional[str] = None,
                  aws_secret_access_key: Optional[str] = None, dropbox_token: Optional[str] = None,
-                 dropbox_root: Optional[bool] = True, google_cloud_credentials_path: Optional[str] = None,
+                 dropbox_root: Optional[bool] = False, google_cloud_credentials_path: Optional[str] = None,
                  google_drive_credentials_path: Optional[str] = None, **kwargs):
 
         """Initializes CloudInterface instance
@@ -47,6 +44,7 @@ class CloudInterface:
         :param aws_access_key_id: access key id for S3 storage
         :param aws_secret_access_key: secret access key for S3 storage
         :param dropbox_token: generated token for dropbox app access
+        :param dropbox_root: namespace id starts from root
         :param google_cloud_credentials_path: local path of google cloud credentials file (json)
         :param google_drive_credentials_path: local path of google drive secret credentials file (json)
         :param kwargs:
@@ -77,7 +75,7 @@ class CloudInterface:
         :return: None
         """
 
-        self._path = path.strip()
+        self._path = path_formatter(path)
 
         if self.is_local_path(self._path):
             if self._local is None:
@@ -254,3 +252,4 @@ class CloudInterface:
                 to_full = os.path.join(to_path, f)
                 logger.info(f'Copied {from_full} file to {to_full}')
                 self.copy(from_full, to_full)
+

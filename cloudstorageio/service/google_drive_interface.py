@@ -7,7 +7,7 @@ from pydrive.drive import GoogleDrive
 from pydrive.auth import GoogleAuth
 from googleapiclient.errors import HttpError
 
-from cloudstorageio.utils.interface import add_slash
+from cloudstorageio.utils.interface_functions import add_slash
 from cloudstorageio.utils.logger import logger
 from cloudstorageio.utils.decorators import timer
 
