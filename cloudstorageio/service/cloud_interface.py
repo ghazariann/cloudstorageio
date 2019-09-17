@@ -21,7 +21,7 @@ from cloudstorageio.service.s3_interface import S3Interface
 from cloudstorageio.service.dropbox_interface import DropBoxInterface
 from cloudstorageio.service.google_drive_interface import GoogleDriveInterface
 
-from cloudstorageio.utils.decorators import timer
+from cloudstorageio.utils.decorators import timer, storage_cache_factory
 from cloudstorageio.utils.interface_functions import path_formatter
 from cloudstorageio.utils.logger import logger
 
@@ -252,4 +252,3 @@ class CloudInterface:
                 to_full = os.path.join(to_path, f)
                 logger.info(f'Copied {from_full} file to {to_full}')
                 self.copy(from_full, to_full)
-

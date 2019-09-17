@@ -13,7 +13,7 @@ class AsyncCloudInterface:
 
     def __init__(self, aws_region_name: Optional[str] = None, aws_access_key_id: Optional[str] = None,
                  aws_secret_access_key: Optional[str] = None, dropbox_token: Optional[str] = None,
-                 dropbox_root: Optional[bool] = True, google_cloud_credentials_path: Optional[str] = None,
+                 dropbox_root: Optional[bool] = False, google_cloud_credentials_path: Optional[str] = None,
                  google_drive_credentials_path: Optional[str] = None, **kwargs):
 
         """Initializes AsyncCloudInterface instance

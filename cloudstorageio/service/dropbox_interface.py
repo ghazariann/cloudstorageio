@@ -18,6 +18,7 @@ from dropbox.files import FileMetadata, FolderMetadata, WriteMode
 from dropbox.exceptions import ApiError
 from dropbox.stone_validators import ValidationError
 
+from cloudstorageio.utils.exceptions import CaseInsensitivityError
 from cloudstorageio.utils.logger import logger
 from cloudstorageio.utils.interface_functions import add_slash
 
@@ -90,10 +91,10 @@ class DropBoxInterface:
 
         if self._isdir or self._isfile:
             self._object_exists = True
-
-            if self.metadata.path_display != self.path and self.metadata.path_lower == self.path.lower():
-                raise KeyError(f'DropBox case-insensitivity conflict: The given  {self.path} is the same file/folder as'
-                               f' {self.metadata.path_display} that already exists')
+            if self.metadata:
+                if self.metadata.path_display != self.path and self.metadata.path_lower == self.path.lower():
+                    raise CaseInsensitivityError(f'DropBox case-insensitivity conflict: The given  {self.path} is'
+                                                 f' the same file(folder) as {self.metadata.path_display}')
 
     def _populate_listdir(self):
         """Appends each file.folder name to self._listdir"""
@@ -199,7 +200,11 @@ class DropBoxInterface:
             raise ValueError(f"Mode '{self._mode}' does not allow writing the file")
 
         try:
-            self.dbx.files_upload(f=content, path=self.path, mode=self._write_mode)
+            res = self.dbx.files_upload(f=content, path=self.path, mode=self._write_mode)
+            if res.path_display != self.path and res.path_lower == self.path.lower():
+                self.dbx.files_delete(self.path)
+                raise CaseInsensitivityError(f'DropBox case-insensitivity conflict: The given  {self.path} is'
+                                             f' the same file(folder) as {res.path_display}')
         except ApiError:
             logger.info(f'Failed to upload {self.path} to dropbox')
 

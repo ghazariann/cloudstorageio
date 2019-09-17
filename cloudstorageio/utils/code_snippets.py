@@ -10,3 +10,5 @@ def get_chunk(seq: list, n_chunks: int) -> list:
     return [seq[i * chunk_len:chunk_len * (i + 1)]
             for i in range(n_chunks)
             if seq[i * chunk_len:chunk_len * (i + 1)]]
+
+# def

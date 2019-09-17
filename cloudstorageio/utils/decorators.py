@@ -28,6 +28,7 @@ def storage_cache_factory(path: str = '/tmp/cache') -> Callable:
     :return: Decorator
     """
     def decorator(func):
+
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             copy_args = copy.deepcopy(list(args))
@@ -36,7 +37,7 @@ def storage_cache_factory(path: str = '/tmp/cache') -> Callable:
             arg_specs = inspect.getfullargspec(func)
             for i, arg_name in enumerate(arg_specs.args):
                 # print(arg_name)
-                while copy_args:
+                if copy_args:
                     all_args.append((arg_name, copy_args.pop(0)))
                     # print(all_args)
 
