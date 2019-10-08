@@ -106,7 +106,7 @@ class DropBoxInterface:
                 except IndexError:
                     full_path = ''
                 if isinstance(f, FolderMetadata):
-                    if not self.list_recursive or self.include_folders:
+                    if self.include_folders:
                         self._listdir.append((add_slash(full_path)))
                 else:
                     self._listdir.append(full_path)

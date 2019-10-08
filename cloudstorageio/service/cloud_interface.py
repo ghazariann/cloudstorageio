@@ -187,13 +187,23 @@ class CloudInterface:
         self._reset_fields()
         return res
 
-    def listdir(self, path: str, recursive: Optional[bool] = False, include_folders_recursive: Optional[bool] = False):
-        """Lists all files/folders containing in given folder path"""
+    def listdir(self, path: str, recursive: Optional[bool] = False, include_folders: Optional[bool] = False) -> list:
+        """ Lists all files/folders containing in given folder path
+        :param path: the full path of folder (with prefix)
+        :param recursive: list folder recursively, (by default no)
+        :param include_folders: include folders in list (by default no, lists only files)
+        :return: list of folder's content (file/folder names)
+        """
         self.identify_path_type(path)
         res = self._current_storage.listdir(path=path, recursive=recursive,
-                                            include_folders=include_folders_recursive)
+                                            include_folders=include_folders)
         self._reset_fields()
         return res
+
+    @storage_cache_factory()
+    def cache_listdir(self, path: str, recursive: Optional[bool] = False, include_folders: Optional[bool] = False):
+        """Cache the output of first call, then use the cached output (when called again)"""
+        return self.listdir(path=path, recursive=recursive, include_folders=include_folders)
 
     def copy(self, from_path: str, to_path: str):
         """Copies given file to new destination
@@ -252,3 +262,8 @@ class CloudInterface:
                 to_full = os.path.join(to_path, f)
                 logger.info(f'Copied {from_full} file to {to_full}')
                 self.copy(from_full, to_full)
+
+
+if __name__ == '__main__':
+    ci = CloudInterface()
+    print(ci.listdir('dbx://', recursive=False, include_folders=False))

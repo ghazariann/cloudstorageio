@@ -52,7 +52,8 @@ class LocalStorageInterface:
         else:
             for i in os.listdir(self.path):
                 if os.path.isdir(os.path.join(self.path, i)):
-                    self._listdir.append(add_slash(i))
+                    if self.include_folders:
+                        self._listdir.append(add_slash(i))
                 else:
                     self._listdir.append(i)
 

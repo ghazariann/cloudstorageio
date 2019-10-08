@@ -152,7 +152,10 @@ class GoogleStorageInterface:
             else:
                 result = [f for f in self._blob_key_names_list if not f.endswith('/')]
         else:
-            result = self._listdir
+            if include_folders:
+                result = self._listdir
+            else:
+                result = [f for f in self._listdir if not f.endswith('/')]
 
         if not self._object_exists:
             raise FileNotFoundError(f'No such file or dictionary: {path}')

@@ -153,15 +153,20 @@ class S3Interface:
     def listdir(self, path: str, recursive: Optional[bool] = False, include_folders: Optional[bool] = False) -> list:
         """Lists content for given folder path"""
         self._analyse_path(path)
+
         if recursive:
             if include_folders:
-                folders = [f for f in self._listdir if f.endswith('/')]
-                result = self._object_key_list + folders
+                folders_list = [f for f in self._listdir if f.endswith('/')]
+                result = self._object_key_list + folders_list
             else:
                 result = [f for f in self._object_key_list if not f.endswith('/')]
 
         else:
-            result = self._listdir
+            if include_folders:
+                result = self._listdir
+            else:
+                result = [f for f in self._listdir if not f.endswith('/')]
+
         if not self._object_exists:
             raise FileNotFoundError(f'No such file or dictionary: {path}')
         elif not self._isdir:
