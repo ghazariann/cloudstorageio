@@ -18,13 +18,14 @@ from dropbox.files import FileMetadata, FolderMetadata, WriteMode
 from dropbox.exceptions import ApiError
 from dropbox.stone_validators import ValidationError
 
+from cloudstorageio.enums.prefix_enum import PrefixEnums
 from cloudstorageio.utils.exceptions import CaseInsensitivityError
 from cloudstorageio.utils.logger import logger
 from cloudstorageio.utils.interface_functions import add_slash
 
 
 class DropBoxInterface:
-    PREFIX = 'dbx://'
+    PREFIX = PrefixEnums.DROPBOX.value
 
     def __init__(self, **kwargs):
         """Initializes DropBoxInterface instance, creates dbx instance

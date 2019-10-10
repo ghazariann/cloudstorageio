@@ -7,6 +7,7 @@ from pydrive.drive import GoogleDrive
 from pydrive.auth import GoogleAuth
 from googleapiclient.errors import HttpError
 
+from cloudstorageio.enums.prefix_enum import PrefixEnums
 from cloudstorageio.utils.interface_functions import add_slash
 from cloudstorageio.utils.logger import logger
 from cloudstorageio.utils.decorators import timer
@@ -17,7 +18,7 @@ logging.getLogger('googleapiclient.discovery_cache').setLevel(logging.ERROR)
 
 
 class GoogleDriveInterface:
-    PREFIX = 'gdrive://'
+    PREFIX = PrefixEnums.GOOGLE_DRIVE.value
 
     mimetypes_changes = {
         'application/vnd.google-apps.document': 'text/plain',

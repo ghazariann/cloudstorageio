@@ -8,13 +8,13 @@
                                 remove method for removing file/folder
                                 copy method for copying file from one storage to another
 """
-import enum
 import functools
 import multiprocessing
 import os
 from multiprocessing.pool import Pool
 from typing import Optional, Callable
 
+from cloudstorageio.enums.prefix_enum import PrefixEnums
 from cloudstorageio.service.google_storage_interface import GoogleStorageInterface
 from cloudstorageio.service.local_storage_interface import LocalStorageInterface
 from cloudstorageio.service.s3_interface import S3Interface
@@ -27,12 +27,6 @@ from cloudstorageio.utils.logger import logger
 
 
 class CloudInterface:
-
-    class PrefixEnums(enum.Enum):
-        S3 = 's3://'
-        GOOGLE_CLOUD = 'gs://'
-        DROPBOX = 'dbx://'
-        DRIVE = 'gdrive://'
 
     def __init__(self, aws_region_name: Optional[str] = None, aws_access_key_id: Optional[str] = None,
                  aws_secret_access_key: Optional[str] = None, dropbox_token: Optional[str] = None,
@@ -102,9 +96,9 @@ class CloudInterface:
                 self._dr = GoogleDriveInterface(**self._kwargs)
             self._current_storage = self._dr
         else:
-            raise ValueError(f"`{path}` is invalid. Please use {self.PrefixEnums.DROPBOX.value} prefix for dropBox,"
-                             f" {self.PrefixEnums.S3.value} for S3 storage, "
-                             f" {self.PrefixEnums.GOOGLE_CLOUD.value} for Google Cloud Storage or VALID local path")
+            raise ValueError(f"`{path}` is invalid. Please use {PrefixEnums.DROPBOX.value} prefix for dropBox,"
+                             f" {PrefixEnums.S3.value} for S3 storage, "
+                             f" {PrefixEnums.GOOGLE_CLOUD.value} for Google Cloud Storage or VALID local path")
 
     def _reset_fields(self):
         """Set all instance attributes to none"""
@@ -128,25 +122,25 @@ class CloudInterface:
             path = os.path.dirname(path)
         return is_dir
 
-    @classmethod
-    def is_s3_path(cls, path: str) -> bool:
+    @staticmethod
+    def is_s3_path(path: str) -> bool:
         """Checks if the given path is for S3 storage"""
-        return path.strip().startswith(cls.PrefixEnums.S3.value)
+        return path.strip().startswith(PrefixEnums.S3.value)
 
-    @classmethod
-    def is_google_storage_path(cls, path: str) -> bool:
+    @staticmethod
+    def is_google_storage_path(path: str) -> bool:
         """Checks if the given path is for google storage"""
-        return path.strip().startswith(cls.PrefixEnums.GOOGLE_CLOUD.value)
+        return path.strip().startswith(PrefixEnums.GOOGLE_CLOUD.value)
 
-    @classmethod
-    def is_dropbox_path(cls, path: str) -> bool:
+    @staticmethod
+    def is_dropbox_path(path: str) -> bool:
         """Checks if the given path is for dropBox"""
-        return path.strip().startswith(cls.PrefixEnums.DROPBOX.value)
+        return path.strip().startswith(PrefixEnums.DROPBOX.value)
 
-    @classmethod
-    def is_drive_path(cls, path: str) -> bool:
+    @staticmethod
+    def is_drive_path(path: str) -> bool:
         """Checks if the given path is for google drive"""
-        return path.strip().startswith(cls.PrefixEnums.DRIVE.value)
+        return path.strip().startswith(PrefixEnums.DRIVE.value)
 
     def open(self, file_path: str, mode: Optional[str] = 'rt', *args, **kwargs) -> Callable:
         """Identifies given file path and return "open" method for detected current storage"""
@@ -266,4 +260,4 @@ class CloudInterface:
 
 if __name__ == '__main__':
     ci = CloudInterface()
-    print(ci.listdir('dbx://', recursive=False, include_folders=False))
+    print(ci.cache_listdir('dbx://', recursive=False, include_folders=False))

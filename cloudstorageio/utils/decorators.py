@@ -8,6 +8,8 @@ import shutil
 import time
 from typing import Callable, Optional
 
+from cloudstorageio.utils.logger import logger
+
 
 def timer(func) -> Callable:
     """A decorator which prints execution time of the decorated function"""
@@ -66,7 +68,8 @@ def storage_cache_factory(path: str = '/tmp/cache') -> Callable:
             key = hash_.hexdigest()
             filename = key + '.p'
             if filename in os.listdir(path):
-                print('Reading from cache')
+                logger.info('Reading from cache')
+                logger.warning("The state of output might be changed after being cached")
                 with open(os.path.join(path, filename), 'rb') as f:
                     res = pickle.load(f)
             else:
