@@ -21,7 +21,7 @@ from dropbox.stone_validators import ValidationError
 from cloudstorageio.enums.prefix_enum import PrefixEnums
 from cloudstorageio.utils.exceptions import CaseInsensitivityError
 from cloudstorageio.utils.logger import logger
-from cloudstorageio.utils.interface_functions import add_slash
+from cloudstorageio.utils.interface_functions import add_slash, str2bool
 
 
 class DropBoxInterface:
@@ -37,6 +37,11 @@ class DropBoxInterface:
 
         if not self.token:
             self.token = os.environ.get('DROPBOX_TOKEN')
+        if self.root is None:
+            self.root = str2bool(os.environ.get('DROPBOX_ROOT'))
+        if not self.root:
+            self.root = False
+
         if not self.token:
             raise ValueError('Please specify dropbox app access key')
 

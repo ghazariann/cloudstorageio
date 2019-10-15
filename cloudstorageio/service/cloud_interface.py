@@ -9,11 +9,13 @@
                                 copy method for copying file from one storage to another
 """
 import functools
+import json
 import multiprocessing
 import os
 from multiprocessing.pool import Pool
 from typing import Optional, Callable
 
+from cloudstorageio.configs.cloud_interface_config import CloudInterfaceConfig
 from cloudstorageio.enums.prefix_enum import PrefixEnums
 from cloudstorageio.service.google_storage_interface import GoogleStorageInterface
 from cloudstorageio.service.local_storage_interface import LocalStorageInterface
@@ -30,7 +32,7 @@ class CloudInterface:
 
     def __init__(self, aws_region_name: Optional[str] = None, aws_access_key_id: Optional[str] = None,
                  aws_secret_access_key: Optional[str] = None, dropbox_token: Optional[str] = None,
-                 dropbox_root: Optional[bool] = False, google_cloud_credentials_path: Optional[str] = None,
+                 dropbox_root: Optional[bool] = None, google_cloud_credentials_path: Optional[str] = None,
                  google_drive_credentials_path: Optional[str] = None, **kwargs):
 
         """Initializes CloudInterface instance
@@ -140,7 +142,7 @@ class CloudInterface:
     @staticmethod
     def is_drive_path(path: str) -> bool:
         """Checks if the given path is for google drive"""
-        return path.strip().startswith(PrefixEnums.DRIVE.value)
+        return path.strip().startswith(PrefixEnums.GOOGLE_DRIVE.value)
 
     def open(self, file_path: str, mode: Optional[str] = 'rt', *args, **kwargs) -> Callable:
         """Identifies given file path and return "open" method for detected current storage"""
@@ -260,3 +262,11 @@ class CloudInterface:
                 to_full = os.path.join(to_path, f)
                 logger.info(f'Copied {from_full} file to {to_full}')
                 self.copy(from_full, to_full)
+
+
+if __name__ == '__main__':
+    json_path = '/home/vahagn/Dropbox/cognaize/cloudstorageio_creds.json'
+    ci = CloudInterface()
+    CloudInterfaceConfig.set_configs(config_json_path=json_path)
+    a = ci.listdir('dbx://ELEMENTS', include_folders=True)
+    print(a)

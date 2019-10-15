@@ -1,6 +1,7 @@
 import os
 import unittest
 
+import cloudstorageio
 from cloudstorageio.service.dropbox_interface import DropBoxInterface
 
 
@@ -15,18 +16,19 @@ class TestDropBoxInterface(unittest.TestCase):
         """
         self.dbx = DropBoxInterface()
 
-        # this 4 paths have to be in storage
-        self.folder_path = 'sample_files'
+        self.test_folder_path = 'TEST'
+        self.dbx_folder_path = 'sample_files'
 
-        self.binary_file = 'sample.jpg'
-        self.text_file = 'sample_files/sample.txt'
+        self.binary_file = os.path.join(self.test_folder_path, 'sample.jpg')
+        self.text_file = os.path.join(self.test_folder_path, 'sample_files/sample.txt')
 
         # not in storage
-        self.not_found_file = 'not_found/not_found.txt'
-        self.new_binary_file = 'sample_files/moon.jpg'
+        self.not_found_file = os.path.join(self.test_folder_path, 'not_found/not_found.txt')
+        self.new_binary_file = os.path.join(self.test_folder_path, 'sample_files/moon.jpg')
 
         self.sample_text = 'lorem ipsum'
-        self.local_test_folder = os.path.join(os.path.dirname(os.getcwd()), 'resources')
+        self.local_test_folder = os.path.abspath(os.path.join(os.path.dirname(cloudstorageio.tests.service.__file__),
+                                                              'resources'))
         self.local_pic = os.path.join(self.local_test_folder, 'Moon.jpg')
 
     def test_read(self):
@@ -70,12 +72,12 @@ class TestDropBoxInterface(unittest.TestCase):
         self.assertEqual(res1, True)
 
         # folder path is not a file
-        res2 = self.dbx.isfile(self.folder_path)
+        res2 = self.dbx.isfile(self.dbx_folder_path)
         self.assertEqual(res2, False)
 
     def test_isdir(self):
         # detecting folder (have file with same name)
-        res1 = self.dbx.isdir(self.folder_path)
+        res1 = self.dbx.isdir(self.dbx_folder_path)
         self.assertEqual(res1, True)
 
         # folder path is not a folder
@@ -83,7 +85,7 @@ class TestDropBoxInterface(unittest.TestCase):
         self.assertEqual(res2, False)
 
     def test_listdir(self):
-        res1 = self.dbx.listdir(self.folder_path)
+        res1 = self.dbx.listdir(self.dbx_folder_path)
         self.assertEqual(len(res1), 1)
 
         self.assertRaises(NotADirectoryError, self.dbx.listdir, self.binary_file)
@@ -91,9 +93,9 @@ class TestDropBoxInterface(unittest.TestCase):
 
     def test_remove(self):
         # remove and compare old and new state's of folder
-        res1 = self.dbx.listdir(self.folder_path)
+        res1 = self.dbx.listdir(self.dbx_folder_path)
         self.dbx.remove(self.text_file)
-        res2 = self.dbx.listdir(self.folder_path)
+        res2 = self.dbx.listdir(self.dbx_folder_path)
         self.assertEqual(len(res1), len(res2)+1)
 
         # return state

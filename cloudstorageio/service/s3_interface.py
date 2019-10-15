@@ -11,6 +11,7 @@
 """
 
 import io
+import os
 from typing import Tuple, Optional, Union
 
 import boto3
@@ -24,7 +25,7 @@ class S3Interface:
     PREFIX = PrefixEnums.S3.value
 
     def __init__(self, **kwargs):
-        """Initializes S3Interface instance, creates session and resource for given credentials
+        """Initializes S3Interface instance, creates session and resources for given credentials
         :param kwargs:
         """
 
@@ -32,6 +33,12 @@ class S3Interface:
         self._region = kwargs.pop('aws_region_name', None)
         self._acc_key = kwargs.pop('aws_access_key_id', None)
         self._acc_secret_key = kwargs.pop('aws_secret_access_key', None)
+        if not self._region:
+            self._region = os.environ.get('AWS_REGION_NAME')
+        if not self._acc_key:
+            self._acc_key = os.environ.get('AWS_ACCESS_KEY')
+        if not self._acc_secret_key:
+            self._acc_secret_key = os.environ.get('AWS_SECRET_ACCESS_KEY')
 
         # check given two access keys mutually existence
         if (self._acc_secret_key and not self._acc_key) or (self._acc_key and not self._acc_secret_key):
