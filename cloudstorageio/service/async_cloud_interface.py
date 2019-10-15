@@ -1,6 +1,9 @@
+import functools
 import itertools
+import multiprocessing
 import os
 import queue
+from multiprocessing.pool import Pool
 
 from typing import Optional
 from threading import Thread
@@ -96,11 +99,12 @@ class AsyncCloudInterface:
 
         return result_list
 
-    @timer
-    def copy_batch(self, from_folder_path: str, to_folder_path: str, process_amount: int = 10):
+    def copy_batch(self, from_path: str, to_path: str, continue_copy: Optional[bool] = False,
+                   process_amount: int = 10):
         """ Asynchronous copy entire batch(folder) to new destination
-        :param from_folder_path: folder/bucket to copy from
-        :param to_folder_path: name of folder to copy files
+        :param from_path: folder/bucket to copy from
+        :param to_path: name of folder to copy files
+        :param continue_copy:
         :param process_amount:
         :return:
         """
@@ -110,13 +114,21 @@ class AsyncCloudInterface:
                             dropbox_root=self.dropbox_root,
                             google_cloud_credentials_path=self.google_cloud_credentials_path,
                             google_drive_credentials_path=self.google_drive_credentials_path)
+        if continue_copy:
+            from_path_list = ci.listdir(from_path, recursive=True)
+            try:
+                to_path_list = ci.listdir(to_path, recursive=True)
+            except FileNotFoundError:
+                to_path_list = []
 
-        files_list = ci.listdir(from_folder_path, recursive=True)
+            full_path_list = list(set(from_path_list) - set(to_path_list))
+        else:
+            full_path_list = ci.listdir(from_path, recursive=True)
 
-        if process_amount > len(files_list):
-            process_amount = len(files_list)
+        if process_amount > len(full_path_list):
+            process_amount = len(full_path_list)
 
-        chunks = self.get_chunk(files_list, process_amount)
+        chunks = self.get_chunk(full_path_list, process_amount)
 
         read_threads = []
         write_threads = []
@@ -125,11 +137,11 @@ class AsyncCloudInterface:
             q = queue.Queue()
 
             read_thread = Thread(target=self.read_files,
-                                 args=(chunk, q, from_folder_path))
+                                 args=(chunk, q, from_path))
 
             read_threads.append(read_thread)
 
-            write_thread = Thread(target=self.write_files, args=(q, from_folder_path, to_folder_path))
+            write_thread = Thread(target=self.write_files, args=(q, from_path, to_path))
             write_threads.append(write_thread)
 
             read_thread.start()

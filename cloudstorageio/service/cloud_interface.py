@@ -240,7 +240,11 @@ class CloudInterface:
         if continue_copy:
             from_path_list = self.listdir(from_path, recursive=True)
 
-            to_path_list = self.listdir(to_path, recursive=True)
+            try:
+                to_path_list = self.listdir(to_path, recursive=True)
+            except FileNotFoundError:
+                to_path_list = []
+
             full_path_list = list(set(from_path_list) - set(to_path_list))
         else:
             full_path_list = self.listdir(from_path, recursive=True)
@@ -256,8 +260,3 @@ class CloudInterface:
                 to_full = os.path.join(to_path, f)
                 logger.info(f'Copied {from_full} file to {to_full}')
                 self.copy(from_full, to_full)
-
-
-if __name__ == '__main__':
-    ci = CloudInterface()
-    print(ci.cache_listdir('dbx://', recursive=False, include_folders=False))
