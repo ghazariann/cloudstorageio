@@ -8,7 +8,7 @@ import shutil
 import time
 from typing import Callable, Optional
 
-from cloudstorageio.utils.logger import logger
+from cloudstorageio.tools.logger import logger
 
 
 def timer(func) -> Callable:
@@ -82,35 +82,6 @@ def storage_cache_factory(path: str = '/tmp/cache') -> Callable:
     return decorator
 
 
-def test_cache():
-    # Simple test for storage_cache_factory
-
-    class A:
-        def __init__(self):
-            pass
-
-        @timer
-        @storage_cache_factory()
-        def expensive_function(self, cc, aa=1, bb=4):
-            time.sleep(2)
-
-    a = A()
-    print("First call")
-    a.expensive_function(3)
-    print("Second call")
-    a.expensive_function(3)
-    # Clean the cache
-    shutil.rmtree('/tmp/cache')
-
-
 if __name__ == "__main__":
+    pass
 
-    from cloudstorageio.service.cloud_interface import CloudInterface
-    ci = CloudInterface()
-
-    @storage_cache_factory()
-    def cached_listdir(path: str, recursive: Optional[bool] = False, include_folders_recursive: Optional[bool] = False):
-        return ci.listdir(path=path, recursive=recursive,  include_folders_recursive=include_folders_recursive)
-
-
-    print(cached_listdir('s3://test-cloudstorageio/PDF'))

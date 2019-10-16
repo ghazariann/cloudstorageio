@@ -8,8 +8,8 @@ from multiprocessing.pool import Pool
 from typing import Optional
 from threading import Thread
 from cloudstorageio import CloudInterface
-from cloudstorageio.utils.decorators import timer
-from cloudstorageio.utils.logger import logger
+from cloudstorageio.tools.decorators import timer
+from cloudstorageio.tools.logger import logger
 
 
 class AsyncCloudInterface:

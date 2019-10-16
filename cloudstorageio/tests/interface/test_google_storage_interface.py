@@ -1,7 +1,7 @@
 import os
 import unittest
 
-from cloudstorageio.service.google_storage_interface import GoogleStorageInterface
+from cloudstorageio.interface.google_storage import GoogleStorageInterface
 
 
 class TestGoogleStorageInterface(unittest.TestCase):
@@ -28,7 +28,7 @@ class TestGoogleStorageInterface(unittest.TestCase):
         self.new_binary_file = 'gs://test-cloudstorageio/sample-files/moon.jpg'
         self.sample_text = 'lorem ipsum'
         self.local_test_folder = os.path.join(os.path.dirname(os.getcwd()), 'resources')
-        self.local_pic = os.path.join(self.local_test_folder, 'Moon.jpg')
+        self.local_pic = os.path.join(self.local_test_folder, 'moon.jpg')
 
     def test_read(self):
         # Reading binary file with context manager

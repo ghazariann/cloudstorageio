@@ -26,7 +26,7 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/VahagnGhaz/cloudstorageio",
     packages=find_packages(exclude=['contrib', 'docs', 'cloudstorageio.log', 'venv', 'cloudstorageio.tests',
-                                    'cloudstorageio.tests.resources', 'cloudstorageio.tests.service',
+                                    'cloudstorageio.tests.resources', 'cloudstorageio.tests.interface',
                                     'cloudstorageio.log']),
     classifiers=[
         # Indicate who your project is intended for

@@ -10,8 +10,8 @@ import os
 import shutil
 from typing import Optional, Union
 
-from cloudstorageio.utils.interface_functions import add_slash
-from cloudstorageio.utils.logger import logger
+from cloudstorageio.tools.collections import add_slash
+from cloudstorageio.tools.logger import logger
 
 
 class LocalStorageInterface:

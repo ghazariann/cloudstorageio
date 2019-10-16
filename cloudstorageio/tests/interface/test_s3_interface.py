@@ -1,7 +1,7 @@
 import os
 import unittest
 
-from cloudstorageio.service.s3_interface import S3Interface
+from cloudstorageio.interface.s3 import S3Interface
 
 
 class TestS3Interface(unittest.TestCase):
@@ -30,7 +30,7 @@ class TestS3Interface(unittest.TestCase):
         self.sample_text = 'lorem ipsum'
 
         self.local_test_folder = os.path.join(os.path.dirname(os.getcwd()), 'resources')
-        self.local_pic = os.path.join(self.local_test_folder, 'Moon.jpg')
+        self.local_pic = os.path.join(self.local_test_folder, 'moon.jpg')
 
     def test_read(self):
         # Reading binary file with context manager

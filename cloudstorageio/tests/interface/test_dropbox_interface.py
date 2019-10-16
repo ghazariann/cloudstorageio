@@ -2,7 +2,7 @@ import os
 import unittest
 
 import cloudstorageio
-from cloudstorageio.service.dropbox_interface import DropBoxInterface
+from cloudstorageio.interface.dropbox import DropBoxInterface
 
 
 class TestDropBoxInterface(unittest.TestCase):
@@ -27,9 +27,9 @@ class TestDropBoxInterface(unittest.TestCase):
         self.new_binary_file = os.path.join(self.test_folder_path, 'sample_files/moon.jpg')
 
         self.sample_text = 'lorem ipsum'
-        self.local_test_folder = os.path.abspath(os.path.join(os.path.dirname(cloudstorageio.tests.service.__file__),
+        self.local_test_folder = os.path.abspath(os.path.join(os.path.dirname(cloudstorageio.tests.interface.__file__),
                                                               'resources'))
-        self.local_pic = os.path.join(self.local_test_folder, 'Moon.jpg')
+        self.local_pic = os.path.join(self.local_test_folder, 'moon.jpg')
 
     def test_read(self):
         # Reading binary file with context manager

@@ -19,9 +19,9 @@ from dropbox.exceptions import ApiError
 from dropbox.stone_validators import ValidationError
 
 from cloudstorageio.enums.prefix_enum import PrefixEnums
-from cloudstorageio.utils.exceptions import CaseInsensitivityError
-from cloudstorageio.utils.logger import logger
-from cloudstorageio.utils.interface_functions import add_slash, str2bool
+from cloudstorageio.exceptions import CaseInsensitivityError
+from cloudstorageio.tools.logger import logger
+from cloudstorageio.tools.collections import add_slash, str2bool
 
 
 class DropBoxInterface:
@@ -175,7 +175,7 @@ class DropBoxInterface:
         if not self._object_exists:
             raise FileNotFoundError(f"Object with path {path} does not exists")
 
-        self.dbx.files_delete(self.path)
+        self.dbx.files_delete_v2(self.path)
 
     def open(self, path: str, mode: Optional[str] = None):
         """Opens a file from dropBox and returns the DropBoxInterface object"""
@@ -208,7 +208,7 @@ class DropBoxInterface:
         try:
             res = self.dbx.files_upload(f=content, path=self.path, mode=self._write_mode)
             if res.path_display != self.path and res.path_lower == self.path.lower():
-                self.dbx.files_delete(self.path)
+                self.dbx.files_delete_v2(self.path)
                 raise CaseInsensitivityError(f'DropBox case-insensitivity conflict: The given  {self.path} is'
                                              f' the same file(folder) as {res.path_display}')
         except ApiError:

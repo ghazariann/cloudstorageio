@@ -8,9 +8,9 @@ from pydrive.auth import GoogleAuth
 from googleapiclient.errors import HttpError
 
 from cloudstorageio.enums.prefix_enum import PrefixEnums
-from cloudstorageio.utils.interface_functions import add_slash
-from cloudstorageio.utils.logger import logger
-from cloudstorageio.utils.decorators import timer
+from cloudstorageio.tools.collections import add_slash
+from cloudstorageio.tools.logger import logger
+from cloudstorageio.tools.decorators import timer
 
 
 # avoiding dependencies' warning

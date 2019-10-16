@@ -9,7 +9,6 @@
                                 copy method for copying file from one storage to another
 """
 import functools
-import json
 import multiprocessing
 import os
 from multiprocessing.pool import Pool
@@ -17,15 +16,15 @@ from typing import Optional, Callable
 
 from cloudstorageio.configs.cloud_interface_config import CloudInterfaceConfig
 from cloudstorageio.enums.prefix_enum import PrefixEnums
-from cloudstorageio.service.google_storage_interface import GoogleStorageInterface
-from cloudstorageio.service.local_storage_interface import LocalStorageInterface
-from cloudstorageio.service.s3_interface import S3Interface
-from cloudstorageio.service.dropbox_interface import DropBoxInterface
-from cloudstorageio.service.google_drive_interface import GoogleDriveInterface
+from cloudstorageio.interface.google_storage import GoogleStorageInterface
+from cloudstorageio.interface.local_storage import LocalStorageInterface
+from cloudstorageio.interface.s3 import S3Interface
+from cloudstorageio.interface.dropbox import DropBoxInterface
+from cloudstorageio.interface.google_drive import GoogleDriveInterface
 
-from cloudstorageio.utils.decorators import timer, storage_cache_factory
-from cloudstorageio.utils.interface_functions import path_formatter
-from cloudstorageio.utils.logger import logger
+from cloudstorageio.tools.decorators import timer, storage_cache_factory
+from cloudstorageio.tools.collections import path_formatter
+from cloudstorageio.tools.logger import logger
 
 
 class CloudInterface:
@@ -183,51 +182,45 @@ class CloudInterface:
         self._reset_fields()
         return res
 
-    def listdir(self, path: str, recursive: Optional[bool] = False, include_folders: Optional[bool] = False) -> list:
+    def listdir(self, path: str, recursive: Optional[bool] = False, exclude_folders: Optional[bool] = False) -> list:
         """ Lists all files/folders containing in given folder path
         :param path: the full path of folder (with prefix)
         :param recursive: list folder recursively, (by default no)
-        :param include_folders: include folders in list (by default no, lists only files)
+        :param exclude_folders: exclude folders from list (by default no, lists folders too)
         :return: list of folder's content (file/folder names)
         """
         self.identify_path_type(path)
-        res = self._current_storage.listdir(path=path, recursive=recursive,
-                                            include_folders=include_folders)
+        res = self._current_storage.listdir(path=path, recursive=recursive, exclude_folders=exclude_folders)
         self._reset_fields()
         return res
 
     @storage_cache_factory()
-    def cache_listdir(self, path: str, recursive: Optional[bool] = False, include_folders: Optional[bool] = False):
-        """Cache the output of first call, then use the cached output (when called again)"""
-        return self.listdir(path=path, recursive=recursive, include_folders=include_folders)
+    def cache_listdir(self, path: str, recursive: Optional[bool] = False, exclude_folders: Optional[bool] = False):
+        """Cache the listed output of the first call, then use the already cached output (when called again)"""
+        return self.listdir(path=path, recursive=recursive, exclude_folders=exclude_folders)
 
     def copy(self, from_path: str, to_path: str):
-        """Copies given file to new destination
-        :param from_path: local or remote storage path of existing file
-        :param to_path: local or remote storage path of new file
-        :return:
-        """
-        with self.open(from_path, 'rb') as f:
-            content = f.read()
-        with self.open(to_path, 'wb') as f:
-            f.write(content)
+        """Copies given file to new destination"""
+
+        content = self.fetch(path=from_path)
+        self.save(path=to_path, content=content)
+        logger.info(f'Copied {from_path} file to {to_path}')
 
     def move(self, from_path: str, to_path: str):
         """Moves given file to new destination"""
+
         self.copy(from_path=from_path, to_path=to_path)
         self.remove(path=from_path)
         logger.info(f'Moved {from_path} file to {to_path}')
 
     def _call_copy(self, p, from_path, to_path):
-        """call copy with from/to full paths"""
+        """Calls copy with full paths"""
         try:
             full_from_path = os.path.join(from_path, p)
             full_to_path = os.path.join(to_path, p)
             self.copy(from_path=full_from_path, to_path=full_to_path)
-            logger.info(f'Copied {full_from_path} file to {full_to_path}')
-
         except Exception as e:
-            logger.info(e, p)
+            logger.error(e, p)
 
     @timer
     def copy_batch(self, from_path: str, to_path: str, multiprocess: Optional[bool] = True,
@@ -240,33 +233,30 @@ class CloudInterface:
         :return:
         """
         if continue_copy:
-            from_path_list = self.listdir(from_path, recursive=True)
+            from_path_list = self.listdir(from_path, recursive=True, exclude_folders=True)
 
             try:
-                to_path_list = self.listdir(to_path, recursive=True)
+                to_path_list = self.listdir(to_path, recursive=True, exclude_folders=True)
             except FileNotFoundError:
                 to_path_list = []
 
             full_path_list = list(set(from_path_list) - set(to_path_list))
         else:
-            full_path_list = self.listdir(from_path, recursive=True)
+            full_path_list = self.listdir(from_path, recursive=True, exclude_folders=True)
 
         if multiprocess:
             p = Pool(multiprocessing.cpu_count())
-            # for each call from_path and to_path are the same
+            # for each call from_path & to_path are constants
             partial_func = functools.partial(self._call_copy, from_path=from_path, to_path=to_path)
             p.map(partial_func, full_path_list)
         else:
             for f in full_path_list:
-                from_full = os.path.join(from_path, f)
-                to_full = os.path.join(to_path, f)
-                logger.info(f'Copied {from_full} file to {to_full}')
-                self.copy(from_full, to_full)
+                self._call_copy(f, from_path, to_path)
 
 
 if __name__ == '__main__':
     json_path = '/home/vahagn/Dropbox/cognaize/cloudstorageio_creds.json'
     ci = CloudInterface()
     CloudInterfaceConfig.set_configs(config_json_path=json_path)
-    a = ci.listdir('dbx://ELEMENTS', include_folders=True)
+    a = ci.listdir('dbx://ELEMENTS')
     print(a)
