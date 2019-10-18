@@ -14,13 +14,13 @@ import os
 from multiprocessing.pool import Pool
 from typing import Optional, Callable
 
-from cloudstorageio.configs.cloud_interface_config import CloudInterfaceConfig
-from cloudstorageio.enums.prefix_enum import PrefixEnums
-from cloudstorageio.interface.google_storage import GoogleStorageInterface
-from cloudstorageio.interface.local_storage import LocalStorageInterface
-from cloudstorageio.interface.s3 import S3Interface
-from cloudstorageio.interface.dropbox import DropBoxInterface
-from cloudstorageio.interface.google_drive import GoogleDriveInterface
+from cloudstorageio.configs import CloudInterfaceConfig
+from cloudstorageio.enums import PrefixEnums
+from cloudstorageio.interface import GoogleStorageInterface
+from cloudstorageio.interface import LocalStorageInterface
+from cloudstorageio.interface import S3Interface
+from cloudstorageio.interface import DropBoxInterface
+from cloudstorageio.interface import GoogleDriveInterface
 
 from cloudstorageio.tools.decorators import timer, storage_cache_factory
 from cloudstorageio.tools.collections import path_formatter
@@ -252,11 +252,3 @@ class CloudInterface:
         else:
             for f in full_path_list:
                 self._call_copy(f, from_path, to_path)
-
-
-if __name__ == '__main__':
-    json_path = '/home/vahagn/Dropbox/cognaize/cloudstorageio_creds.json'
-    ci = CloudInterface()
-    CloudInterfaceConfig.set_configs(config_json_path=json_path)
-    a = ci.listdir('dbx://ELEMENTS')
-    print(a)

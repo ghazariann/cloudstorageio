@@ -7,7 +7,7 @@ from multiprocessing.pool import Pool
 
 from typing import Optional
 from threading import Thread
-from cloudstorageio import CloudInterface
+from cloudstorageio.interface.cloud_interface import CloudInterface
 from cloudstorageio.tools.decorators import timer
 from cloudstorageio.tools.logger import logger
 

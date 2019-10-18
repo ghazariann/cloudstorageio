@@ -1,12 +1,12 @@
 client_config_backend: file
-client_config_file: /home/vahagn/Dropbox/cognaize_docs/google_drive_client_secret.json
+client_config_file: /home/vahagn/Dropbox/dev/docs/google_drive_client_secrets.json
 client_config:
     client_id: <your_client_id>
     client_secret: <your_secret>
 
 save_credentials: True
 save_credentials_backend: file
-save_credentials_file: /home/vahagn/dev/workspace/my_projects/cloudstorageio/cloudstorageio/configs/credentials.json
+save_credentials_file: /home/vahagn/dev/workspace/my_projects/services/cloudstorageio/cloudstorageio/configs/resources/credentials.json
 
 get_refresh_token: True
 

@@ -18,7 +18,7 @@ def timer(func) -> Callable:
     def wrapper(*args, **kwargs):
         start_time = time.time()
         result = func(*args, **kwargs)
-        print("Executed {} in {:.4f} seconds"
+        logger.info("Executed {} in {:.4f} seconds"
               .format(func.__name__, (time.time() - start_time)))
         return result
     return wrapper

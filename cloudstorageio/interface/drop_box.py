@@ -18,7 +18,7 @@ from dropbox.files import FileMetadata, FolderMetadata, WriteMode
 from dropbox.exceptions import ApiError
 from dropbox.stone_validators import ValidationError
 
-from cloudstorageio.enums.prefix_enum import PrefixEnums
+from cloudstorageio.enums.enums import PrefixEnums
 from cloudstorageio.exceptions import CaseInsensitivityError
 from cloudstorageio.tools.logger import logger
 from cloudstorageio.tools.collections import add_slash, str2bool
@@ -109,15 +109,15 @@ class DropBoxInterface:
             for f in metadata.entries:
                 try:
                     full_path = re.split(add_slash(self.path), f.path_display, flags=re.IGNORECASE, maxsplit=1)[1]
+                    if isinstance(f, FolderMetadata):
+                        if self.include_folders:
+                            self._listdir.append((add_slash(full_path)))
+                    else:
+                        self._listdir.append(full_path)
                 except IndexError:
-                    full_path = ''
-                if isinstance(f, FolderMetadata):
-                    if self.include_folders:
-                        self._listdir.append((add_slash(full_path)))
-                else:
-                    self._listdir.append(full_path)
+                    # failed to split path
+                    continue
 
-        # try:
         folder_metadata = self.dbx.files_list_folder(self.path, recursive=self.list_recursive)
 
         __populate_metadata(metadata=folder_metadata)
@@ -155,10 +155,10 @@ class DropBoxInterface:
         self._analyse_path(path)
         return self._isdir
 
-    def listdir(self, path: str, recursive: Optional[bool] = False, include_folders: Optional[bool] = False):
+    def listdir(self, path: str, recursive: Optional[bool] = False, exclude_folders: Optional[bool] = False):
         """Lists content for given folder path"""
         self.list_recursive = recursive
-        self.include_folders = include_folders
+        self.include_folders = not exclude_folders
         self._analyse_path(path)
         if self._isdir:
             self._populate_listdir()

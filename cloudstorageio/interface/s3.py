@@ -16,7 +16,7 @@ from typing import Tuple, Optional, Union
 
 import boto3
 
-from cloudstorageio.enums.prefix_enum import PrefixEnums
+from cloudstorageio.enums.enums import PrefixEnums
 from cloudstorageio.tools.collections import add_slash
 from cloudstorageio.tools.logger import logger
 
@@ -101,7 +101,7 @@ class S3Interface:
         :param blob_name: storage.blob.Blob object
         :return:
         """
-        split_list = blob_name.split(self._current_path_with_backslash, 1)
+        split_list = blob_name.split('/', 1)
         if len(split_list) == 2:
             inner_object_name = add_slash(split_list[0])
         else:
@@ -158,10 +158,10 @@ class S3Interface:
         self._analyse_path(path)
         return self._isdir
 
-    def listdir(self, path: str, recursive: Optional[bool] = False, include_folders: Optional[bool] = False) -> list:
+    def listdir(self, path: str, recursive: Optional[bool] = False, exclude_folders: Optional[bool] = False) -> list:
         """Lists content for given folder path"""
         self._analyse_path(path)
-
+        include_folders = not exclude_folders
         if recursive:
             if include_folders:
                 folders_list = [f for f in self._listdir if f.endswith('/')]

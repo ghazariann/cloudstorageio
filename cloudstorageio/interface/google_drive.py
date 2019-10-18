@@ -7,11 +7,11 @@ from pydrive.drive import GoogleDrive
 from pydrive.auth import GoogleAuth
 from googleapiclient.errors import HttpError
 
-from cloudstorageio.enums.prefix_enum import PrefixEnums
+from cloudstorageio.enums.enums import PrefixEnums
 from cloudstorageio.tools.collections import add_slash
 from cloudstorageio.tools.logger import logger
 from cloudstorageio.tools.decorators import timer
-
+from cloudstorageio.configs import resources, CloudInterfaceConfig
 
 # avoiding dependencies' warning
 logging.getLogger('googleapiclient.discovery_cache').setLevel(logging.ERROR)
@@ -24,17 +24,17 @@ class GoogleDriveInterface:
         'application/vnd.google-apps.document': 'text/plain',
         'application/vnd.google-apps.spreadsheet': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}
 
-    settings_file = os.path.abspath(os.path.join(os.path.dirname(cloudstorageio.__file__), 'configs/settings.yaml'))
+    settings_file = os.path.abspath(os.path.join(os.path.dirname(resources.__file__), 'settings.yaml'))
 
     def __init__(self, **kwargs):
 
         self.config_file_path = kwargs.pop('google_cloud_credentials_path', None)
 
         if not self.config_file_path:
-            self.token = os.environ.get('GOOGLE_DRIVE_CREDENTIALS')
+            self.config_file_path = os.environ.get('GOOGLE_DRIVE_CREDENTIALS')
         if not self.config_file_path:
             raise ValueError("Please add GOOGLE_DRIVE_CREDENTIALS environment variable"
-                             "or set google_drive_credentials_json_path")
+                             " or set google_drive_credentials_json_path")
 
         self.tmp_folder = os.path.abspath(os.path.join(os.path.dirname(cloudstorageio.__file__), 'tmp'))
         self.credentials = self._setup()
@@ -46,7 +46,7 @@ class GoogleDriveInterface:
         self.metadata = None
         self.path = None
         self.recursive = False
-        self.include_folder = False
+        self.include_folders = False
 
     def _setup(self):
 
@@ -63,9 +63,7 @@ class GoogleDriveInterface:
         client_config_file = yaml_string.split('client_config_file:', 1)[1].split()[0]
 
         save_credentials_file = yaml_string.split('save_credentials_file:', 1)[1].split()[0]
-        save_credentials_file_new = os.path.abspath(os.path.join(os.path.dirname(cloudstorageio.__file__),
-                                                                 'configs/credentials.json'))
-
+        save_credentials_file_new = os.path.abspath(os.path.join(os.path.dirname(resources.__file__), 'credentials.json'))
         yaml_string = yaml_string.replace(client_config_file, self.config_file_path)
         yaml_string = yaml_string.replace(save_credentials_file, save_credentials_file_new)
 
@@ -153,7 +151,7 @@ class GoogleDriveInterface:
             for f in file_list:
                 if f['mimeType'] == 'application/vnd.google-apps.folder':
                     p = parent + add_slash(f['title'])
-                    if self.include_folder:
+                    if self.include_folders:
                         self._listdir.append(p)
                     if self.recursive:
                         self._populate_listdir(f['id'], parent=p)
@@ -190,10 +188,10 @@ class GoogleDriveInterface:
         self._analyse_path(path)
         return self._isdir
 
-    def listdir(self, path: str, recursive: Optional[bool] = False, include_folders: Optional[bool] = False):
+    def listdir(self, path: str, recursive: Optional[bool] = False, exclude_folders: Optional[bool] = False):
         """Lists content for given folder path"""
         self.recursive = recursive
-        self.include_folder = include_folders
+        self.include_folders = not exclude_folders
         self._analyse_path(path)
 
         if not self._object_exists:
@@ -286,9 +284,13 @@ class GoogleDriveInterface:
 # TEST
 @timer
 def main():
-    configs = '/home/vahagn/Dropbox/cognaize_docs/google_drive_client_secret.json'
-    my_configs = '/home/vahagn/Dropbox/my_docs/dev/google_drive_client_secrets.json'
-    dr = GoogleDriveInterface(config_file_path=configs)
+    # configs = '/home/vahagn/Dropbox/cognaize_docs/google_drive_client_secret.json'
+    my_configs = '/home/vahagn/dev/workspace/my_projects/services/cloudstorageio/cloudstorageio/tests/mixed_cloudstorageio_creds.json'
+    CloudInterfaceConfig.set_configs(config_json_path=my_configs)
+    dr = GoogleDriveInterface()
 
-    path = dr.listdir('1GhNthsaKrsVWaSHUt2bhyjt81PwummOh')
+    path = dr.listdir('test-cloudstorageio')
+    print(path)
 
+if __name__ == '__main__':
+    main()
