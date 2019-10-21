@@ -14,14 +14,15 @@ class TestCloudInterface(unittest.TestCase):
     """Tests all CloudInterface methods with all available services"""
 
     # input all services' prefixes that you want to use
-    services = [PrefixEnums.S3, PrefixEnums.DROPBOX, PrefixEnums.GOOGLE_CLOUD, ] #PrefixEnums.GOOGLE_DRIVE]
+    # services = [PrefixEnums.S3, PrefixEnums.DROPBOX, PrefixEnums.GOOGLE_CLOUD, ] [PrefixEnums.GOOGLE_DRIVE]
+    services = [PrefixEnums.GOOGLE_DRIVE]
 
     # IF use S3 or GOOGLE_CLOUD specify bucket names
     S3_BUCKET_NAME = 'test-cloudstorageio'
     GS_BUCKET_NAME = 'test-cloudstorageio'
 
     # Give credentials manually to CloudInterface or set environment variables with CloudInterfaceConfig
-    config_path = ''
+    config_path = '/home/vahagn/Dropbox/cognaize/mixed_cloudstorageio_creds.json'
     CloudInterfaceConfig.set_configs(config_json_path=config_path)
 
     ci = CloudInterface()

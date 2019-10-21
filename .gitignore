@@ -112,6 +112,7 @@ venv.bak/
 # Temp folder
 /temp
 /docs
-/cloudstorageio/log
+/log
 # generated config file
 /cloudstorageio/configs/resources/credentials.json
+/gdrive_tmp/

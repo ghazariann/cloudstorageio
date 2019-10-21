@@ -1,4 +1,6 @@
 import os
+import shutil
+
 import cloudstorageio
 import logging
 
@@ -36,7 +38,11 @@ class GoogleDriveInterface:
             raise ValueError("Please add GOOGLE_DRIVE_CREDENTIALS environment variable"
                              " or set google_drive_credentials_json_path")
 
-        self.tmp_folder = os.path.abspath(os.path.join(os.path.dirname(cloudstorageio.__file__), 'tmp'))
+        self.tmp_folder = os.path.join(os.path.dirname(os.path.dirname(cloudstorageio.__file__)), 'gdrive_tmp')
+        if os.path.isdir(self.tmp_folder):
+            shutil.rmtree(self.tmp_folder)
+        os.mkdir(path=self.tmp_folder)
+
         self.credentials = self._setup()
         self.drive = GoogleDrive(self.credentials)
         self._encoding = 'utf8'
@@ -211,6 +217,9 @@ class GoogleDriveInterface:
         self._analyse_path(path)
         return self
 
+    def _create_folders(self, path: str):
+        pass
+
     def write(self, content: Union[str, bytes], metadata: Optional[dict] = None):
         """Writes content to file on google drive
         :param content: The content that should be written to a file
@@ -234,6 +243,8 @@ class GoogleDriveInterface:
             file = self.drive.CreateFile({'id': self.id})
         else:
             folder_id = self.get_id_from_full_path(self.path.rsplit('/', 1)[0])
+            if not folder_id:
+                self._create_folders(self.path)
             file = self.drive.CreateFile({'title': self.path.rsplit('/')[-1], 'parents': [{"id": folder_id}]})
 
         tmp_file_path = os.path.join(self.tmp_folder, self.path.rsplit('/')[-1])
@@ -281,16 +292,12 @@ class GoogleDriveInterface:
         self._is_open = False
         self.path = None
 
-# TEST
-@timer
-def main():
-    my_configs = '/home/vahagn/Dropbox/cognaize/mixed_cloudstorageio_creds.json'
-    CloudInterfaceConfig.set_configs(config_json_path=my_configs)
-    dr = GoogleDriveInterface()
-
-    path = dr.listdir('test-cloudstorageio')
-    print(path)
-
 
 if __name__ == '__main__':
-    main()
+    path = '/home/vahagn/Dropbox/cognaize/mixed_cloudstorageio_creds.json'
+    CloudInterfaceConfig.set_configs(config_json_path=path)
+    dr = GoogleDriveInterface()
+    # dr.listdir("gdrive://")
+    with dr.open(path='gdrive://test-cloudstorageio/abc/abs.txt', mode='w') as f:
+        res = f.write('ssfvsfb')
+    print(res)

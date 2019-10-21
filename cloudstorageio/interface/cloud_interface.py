@@ -99,7 +99,8 @@ class CloudInterface:
         else:
             raise ValueError(f"`{path}` is invalid. Please use {PrefixEnums.DROPBOX.value} prefix for dropBox,"
                              f" {PrefixEnums.S3.value} for S3 storage, "
-                             f" {PrefixEnums.GOOGLE_CLOUD.value} for Google Cloud Storage or VALID local path")
+                             f" {PrefixEnums.GOOGLE_CLOUD.value} for Google Cloud Storage,"
+                             f"{PrefixEnums.GOOGLE_DRIVE.value} for Google Drive, or VALID local path")
 
     def _reset_fields(self):
         """Set all instance attributes to none"""
@@ -220,7 +221,7 @@ class CloudInterface:
             full_to_path = os.path.join(to_path, p)
             self.copy(from_path=full_from_path, to_path=full_to_path)
         except Exception as e:
-            logger.error(e, p)
+            logger.error(f'Failed to copy {p} file : {e}')
 
     @timer
     def copy_batch(self, from_path: str, to_path: str, multiprocess: Optional[bool] = True,
@@ -252,3 +253,11 @@ class CloudInterface:
         else:
             for f in full_path_list:
                 self._call_copy(f, from_path, to_path)
+
+
+if __name__ == '__main__':
+    path = '/home/vahagn/Dropbox/cognaize/mixed_cloudstorageio_creds.json'
+    CloudInterfaceConfig.set_configs(config_json_path=path)
+    ci = CloudInterface()
+    res = ci.listdir('gdrive://')
+    print(res)
