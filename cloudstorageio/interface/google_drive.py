@@ -284,13 +284,13 @@ class GoogleDriveInterface:
 # TEST
 @timer
 def main():
-    # configs = '/home/vahagn/Dropbox/cognaize_docs/google_drive_client_secret.json'
-    my_configs = '/home/vahagn/dev/workspace/my_projects/services/cloudstorageio/cloudstorageio/tests/mixed_cloudstorageio_creds.json'
+    my_configs = '/home/vahagn/Dropbox/cognaize/mixed_cloudstorageio_creds.json'
     CloudInterfaceConfig.set_configs(config_json_path=my_configs)
     dr = GoogleDriveInterface()
 
     path = dr.listdir('test-cloudstorageio')
     print(path)
+
 
 if __name__ == '__main__':
     main()

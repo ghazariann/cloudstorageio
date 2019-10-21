@@ -18,6 +18,7 @@ from dropbox.files import FileMetadata, FolderMetadata, WriteMode
 from dropbox.exceptions import ApiError
 from dropbox.stone_validators import ValidationError
 
+from cloudstorageio.configs import CloudInterfaceConfig
 from cloudstorageio.enums.enums import PrefixEnums
 from cloudstorageio.exceptions import CaseInsensitivityError
 from cloudstorageio.tools.logger import logger
@@ -241,3 +242,11 @@ class DropBoxInterface:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._is_open = False
         self.path = None
+
+
+if __name__ == '__main__':
+    my_configs = '/home/vahagn/Dropbox/cognaize/cloudstorageio_creds.json'
+    CloudInterfaceConfig.set_configs(config_json_path=my_configs)
+    dr = DropBoxInterface()
+    res = dr.listdir('dbx://')
+    print(res)
