@@ -15,7 +15,7 @@ from typing import Tuple, Union, Optional
 from google.cloud import storage
 
 from cloudstorageio.enums.enums import PrefixEnums
-from cloudstorageio.tools.collections import add_slash
+from cloudstorageio.tools.ci_collections import add_slash
 from cloudstorageio.tools.logger import logger
 
 

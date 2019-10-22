@@ -69,7 +69,7 @@ def storage_cache_factory(path: str = '/tmp/cache') -> Callable:
             filename = key + '.p'
             if filename in os.listdir(path):
                 logger.info('Reading from cache')
-                logger.warning("The state of output might be changed after being cached")
+                logger.warning("The output might be changed after being cached")
                 with open(os.path.join(path, filename), 'rb') as f:
                     res = pickle.load(f)
             else:

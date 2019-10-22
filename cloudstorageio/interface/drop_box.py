@@ -22,7 +22,7 @@ from cloudstorageio.configs import CloudInterfaceConfig
 from cloudstorageio.enums.enums import PrefixEnums
 from cloudstorageio.exceptions import CaseInsensitivityError
 from cloudstorageio.tools.logger import logger
-from cloudstorageio.tools.collections import add_slash, str2bool
+from cloudstorageio.tools.ci_collections import add_slash, str2bool
 
 
 class DropBoxInterface:

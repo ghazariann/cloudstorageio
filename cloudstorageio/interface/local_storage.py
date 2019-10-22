@@ -10,7 +10,7 @@ import os
 import shutil
 from typing import Optional, Union
 
-from cloudstorageio.tools.collections import add_slash
+from cloudstorageio.tools.ci_collections import add_slash
 from cloudstorageio.tools.logger import logger
 
 

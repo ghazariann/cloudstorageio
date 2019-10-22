@@ -10,7 +10,7 @@ from pydrive.auth import GoogleAuth
 from googleapiclient.errors import HttpError
 
 from cloudstorageio.enums.enums import PrefixEnums
-from cloudstorageio.tools.collections import add_slash
+from cloudstorageio.tools.ci_collections import add_slash
 from cloudstorageio.tools.logger import logger
 from cloudstorageio.tools.decorators import timer
 from cloudstorageio.configs import resources, CloudInterfaceConfig

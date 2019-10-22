@@ -17,7 +17,7 @@ from typing import Tuple, Optional, Union
 import boto3
 
 from cloudstorageio.enums.enums import PrefixEnums
-from cloudstorageio.tools.collections import add_slash
+from cloudstorageio.tools.ci_collections import add_slash
 from cloudstorageio.tools.logger import logger
 
 

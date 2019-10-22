@@ -23,7 +23,7 @@ from cloudstorageio.interface import DropBoxInterface
 from cloudstorageio.interface import GoogleDriveInterface
 
 from cloudstorageio.tools.decorators import timer, storage_cache_factory
-from cloudstorageio.tools.collections import path_formatter
+from cloudstorageio.tools.ci_collections import path_formatter
 from cloudstorageio.tools.logger import logger
 
 
