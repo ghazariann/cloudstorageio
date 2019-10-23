@@ -291,13 +291,3 @@ class GoogleDriveInterface:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._is_open = False
         self.path = None
-
-
-if __name__ == '__main__':
-    path = '/home/vahagn/Dropbox/cognaize/mixed_cloudstorageio_creds.json'
-    CloudInterfaceConfig.set_configs(config_json_path=path)
-    dr = GoogleDriveInterface()
-    # dr.listdir("gdrive://")
-    with dr.open(path='gdrive://test-cloudstorageio/abc/abs.txt', mode='w') as f:
-        res = f.write('ssfvsfb')
-    print(res)

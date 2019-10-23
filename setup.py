@@ -11,7 +11,7 @@ from cloudstorageio import __name__ as package_name
 from cloudstorageio import __version__ as package_version
 
 # Get the long description from the README file
-with open("README.md", "r") as fh:
+with open("READMe.md", "r") as fh:
     long_description = fh.read()
 with open('requirements.txt', 'r') as rf:
     requirements = rf.read().split('\n')

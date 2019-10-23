@@ -253,11 +253,3 @@ class CloudInterface:
         else:
             for f in full_path_list:
                 self._call_copy(f, from_path, to_path)
-
-
-if __name__ == '__main__':
-    path = '/home/vahagn/Dropbox/cognaize/mixed_cloudstorageio_creds.json'
-    CloudInterfaceConfig.set_configs(config_json_path=path)
-    ci = CloudInterface()
-    res = ci.listdir('gdrive://')
-    print(res)
