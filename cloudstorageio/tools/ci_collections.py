@@ -14,3 +14,20 @@ def str2bool(bool_string: str):
     if not bool_string:
         return None
     return bool_string.lower() in ("yes", "true", "1")
+
+
+def get_chunk(seq: list, n_chunks: int, sort: bool = True) -> list:
+    """
+    Divides given sequence to n chunks
+    """
+    if sort is True:
+        seq = sorted(seq)
+
+    seq_len = len(seq)
+    if n_chunks > seq_len:
+        raise ValueError(f"The number of chunks ({n_chunks}) exceeds the"
+                         f" length of the sequence ({seq_len})")
+    chunk_len = seq_len // n_chunks + bool(seq_len % n_chunks)
+    return [seq[i * chunk_len:chunk_len * (i + 1)]
+            for i in range(n_chunks)
+            if seq[i * chunk_len:chunk_len * (i + 1)]]
