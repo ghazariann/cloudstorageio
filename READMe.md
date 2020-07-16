@@ -1,5 +1,5 @@
 # cloudstorageio
-_Powered by_  [Cognaize](https://www.cognaize.com/)  ![logo](/docs/cognaize_logo.png)
+_Powered by_  [Cognaize](https://www.cognaize.com/)  ![](/docs/cognaize_logo.png)
 
 Storage agnostic IO interface for humans
 
