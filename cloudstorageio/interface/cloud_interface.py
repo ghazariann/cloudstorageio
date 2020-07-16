@@ -205,14 +205,14 @@ class CloudInterface:
 
         content = self.fetch(path=from_path)
         self.save(path=to_path, content=content)
-        logger.info(f'Copied {from_path} file to {to_path}')
+        # logger.info(f'Copied {from_path} file to {to_path}')
 
     def move(self, from_path: str, to_path: str):
         """Moves given file to new destination"""
 
         self.copy(from_path=from_path, to_path=to_path)
         self.remove(path=from_path)
-        logger.info(f'Moved {from_path} file to {to_path}')
+        # logger.info(f'Moved {from_path} file to {to_path}')
 
     def _call_copy(self, p, from_path, to_path):
         """Calls copy with full paths"""

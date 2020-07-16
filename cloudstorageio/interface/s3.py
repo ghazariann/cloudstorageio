@@ -224,7 +224,8 @@ class S3Interface:
         :return: String content of the file specified in the file path argument
         """
         if self._isfile:
-            logger.info('Overwriting {} file'.format(self.path))
+            ...
+            # logger.info('Overwriting {} file'.format(self.path))
         if isinstance(content, str):
             content = content.encode('utf8')
         if not metadata:

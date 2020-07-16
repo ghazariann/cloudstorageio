@@ -14,8 +14,8 @@ class TestCloudInterface(unittest.TestCase):
     """Tests all CloudInterface methods with all available services"""
 
     # input all services' prefixes that you want to use
-    # services = [PrefixEnums.S3, PrefixEnums.DROPBOX, PrefixEnums.GOOGLE_CLOUD, ] [PrefixEnums.GOOGLE_DRIVE]
-    services = [PrefixEnums.GOOGLE_DRIVE]
+    services = [PrefixEnums.S3, PrefixEnums.DROPBOX, PrefixEnums.GOOGLE_CLOUD, ]
+    # services = [PrefixEnums.GOOGLE_DRIVE]
 
     # IF use S3 or GOOGLE_CLOUD specify bucket names
     S3_BUCKET_NAME = 'test-cloudstorageio'

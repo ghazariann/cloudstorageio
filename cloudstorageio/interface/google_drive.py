@@ -239,7 +239,7 @@ class GoogleDriveInterface:
             raise ValueError(f"Mode '{self._mode}' does not allow writing the file")
 
         if self._isfile:
-            logger.info('Overwriting {} file'.format(self.path))
+            # logger.info('Overwriting {} file'.format(self.path))
             file = self.drive.CreateFile({'id': self.id})
         else:
             folder_id = self.get_id_from_full_path(self.path.rsplit('/', 1)[0])
