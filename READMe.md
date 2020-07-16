@@ -3,7 +3,7 @@ _Powered by_  [Cognaize](https://www.cognaize.com/)  ![](/docs/cognaize_logo.png
 
 Storage agnostic IO interface for humans
 
-_Developed and tested on python 3.7+_
+_Developed and tested on python 3.7+_/home/vahagn/Downloads/cognaize_logo.png
 
 [GitHub](https://github.com/VahagnGhaz/cloudstorageio)
 
