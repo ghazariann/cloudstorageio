@@ -23,7 +23,7 @@ from cloudstorageio.interface import DropBoxInterface
 from cloudstorageio.interface import GoogleDriveInterface
 
 from cloudstorageio.tools.decorators import timer, storage_cache_factory
-from cloudstorageio.tools.collections import path_formatter
+from cloudstorageio.tools.ci_collections import path_formatter
 from cloudstorageio.tools.logger import logger
 
 
@@ -205,14 +205,12 @@ class CloudInterface:
 
         content = self.fetch(path=from_path)
         self.save(path=to_path, content=content)
-        logger.info(f'Copied {from_path} file to {to_path}')
 
     def move(self, from_path: str, to_path: str):
         """Moves given file to new destination"""
 
         self.copy(from_path=from_path, to_path=to_path)
         self.remove(path=from_path)
-        logger.info(f'Moved {from_path} file to {to_path}')
 
     def _call_copy(self, p, from_path, to_path):
         """Calls copy with full paths"""
@@ -224,40 +222,53 @@ class CloudInterface:
             logger.error(f'Failed to copy {p} file : {e}')
 
     @timer
-    def copy_batch(self, from_path: str, to_path: str, multiprocess: Optional[bool] = True,
-                   continue_copy: Optional[bool] = False):
-        """ Copy entire batch(folder) to new destination
-        :param from_path: folder/bucket to copy from
-        :param to_path: name of folder to copy files
-        :param multiprocess: indicator of doing process with multiprocess(faster) or with simple for loop
-        :param continue_copy:
+    def copy_dir(self, source_dir: str, dest_dir: str, multiprocess: Optional[bool] = True,
+                 continue_copy: Optional[bool] = False):
+        """ Recursively copy a directory
+        :param source_dir: folder/bucket to copy from
+        :param dest_dir: folder/bucket to copy to (dest_dir does not need to exist)
+        :param multiprocess: indicator of multiprocessing
+        :param continue_copy: if True, will ignore the same files existing in both dirs and copy only differing ones
         :return:
         """
         if continue_copy:
-            from_path_list = self.listdir(from_path, recursive=True, exclude_folders=True)
+            from_path_list = self.listdir(source_dir, recursive=True, exclude_folders=True)
 
             try:
-                to_path_list = self.listdir(to_path, recursive=True, exclude_folders=True)
+                to_path_list = self.listdir(dest_dir, recursive=True, exclude_folders=True)
             except FileNotFoundError:
                 to_path_list = []
 
             full_path_list = list(set(from_path_list) - set(to_path_list))
         else:
-            full_path_list = self.listdir(from_path, recursive=True, exclude_folders=True)
+            full_path_list = self.listdir(source_dir, recursive=True, exclude_folders=True)
 
         if multiprocess:
             p = Pool(multiprocessing.cpu_count())
             # for each call from_path & to_path are constants
-            partial_func = functools.partial(self._call_copy, from_path=from_path, to_path=to_path)
+            partial_func = functools.partial(self._call_copy, from_path=source_dir, to_path=dest_dir)
             p.map(partial_func, full_path_list)
         else:
             for f in full_path_list:
-                self._call_copy(f, from_path, to_path)
+                self._call_copy(f, source_dir, dest_dir)
 
+    def _call_copy_zip(self, from_to_zip: zip):
+        try:
+            self.copy(from_to_zip[0], from_to_zip[1])
+        except Exception as e:
+            logger.error(f'Failed to copy {from_to_zip[0]} file : {e}')
 
-if __name__ == '__main__':
-    path = '/home/vahagn/Dropbox/cognaize/mixed_cloudstorageio_creds.json'
-    CloudInterfaceConfig.set_configs(config_json_path=path)
-    ci = CloudInterface()
-    res = ci.listdir('gdrive://')
-    print(res)
+    def copy_batch(self, from_batch: list, to_batch: list, multiprocess: Optional[bool] = True):
+        """ Copy entire batch (list)
+        :param from_batch: folder/file path list to copy from
+        :param to_batch: folder/file path list to copy to
+        :param multiprocess: indicator of doing process with multiprocessing
+        :return:
+        """
+        if multiprocess:
+            p = Pool(multiprocessing.cpu_count())
+            partial_func = functools.partial(self._call_copy_zip)
+            p.map(partial_func, zip(from_batch, to_batch))
+        else:
+            for from_file, to_file in zip(from_batch, to_batch):
+                self.copy(from_path=from_file, to_path=to_file)

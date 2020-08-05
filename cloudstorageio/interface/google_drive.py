@@ -10,7 +10,7 @@ from pydrive.auth import GoogleAuth
 from googleapiclient.errors import HttpError
 
 from cloudstorageio.enums.enums import PrefixEnums
-from cloudstorageio.tools.collections import add_slash
+from cloudstorageio.tools.ci_collections import add_slash
 from cloudstorageio.tools.logger import logger
 from cloudstorageio.tools.decorators import timer
 from cloudstorageio.configs import resources, CloudInterfaceConfig
@@ -239,7 +239,7 @@ class GoogleDriveInterface:
             raise ValueError(f"Mode '{self._mode}' does not allow writing the file")
 
         if self._isfile:
-            logger.info('Overwriting {} file'.format(self.path))
+            # logger.info('Overwriting {} file'.format(self.path))
             file = self.drive.CreateFile({'id': self.id})
         else:
             folder_id = self.get_id_from_full_path(self.path.rsplit('/', 1)[0])
@@ -291,13 +291,3 @@ class GoogleDriveInterface:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._is_open = False
         self.path = None
-
-
-if __name__ == '__main__':
-    path = '/home/vahagn/Dropbox/cognaize/mixed_cloudstorageio_creds.json'
-    CloudInterfaceConfig.set_configs(config_json_path=path)
-    dr = GoogleDriveInterface()
-    # dr.listdir("gdrive://")
-    with dr.open(path='gdrive://test-cloudstorageio/abc/abs.txt', mode='w') as f:
-        res = f.write('ssfvsfb')
-    print(res)

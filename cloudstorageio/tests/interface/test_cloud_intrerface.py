@@ -14,15 +14,15 @@ class TestCloudInterface(unittest.TestCase):
     """Tests all CloudInterface methods with all available services"""
 
     # input all services' prefixes that you want to use
-    # services = [PrefixEnums.S3, PrefixEnums.DROPBOX, PrefixEnums.GOOGLE_CLOUD, ] [PrefixEnums.GOOGLE_DRIVE]
-    services = [PrefixEnums.GOOGLE_DRIVE]
+    services = [PrefixEnums.S3, PrefixEnums.DROPBOX, PrefixEnums.GOOGLE_CLOUD, ]
+    # services = [PrefixEnums.GOOGLE_DRIVE]
 
     # IF use S3 or GOOGLE_CLOUD specify bucket names
     S3_BUCKET_NAME = 'test-cloudstorageio'
     GS_BUCKET_NAME = 'test-cloudstorageio'
 
     # Give credentials manually to CloudInterface or set environment variables with CloudInterfaceConfig
-    config_path = '/home/vahagn/Dropbox/cognaize/mixed_cloudstorageio_creds.json'
+    config_path = os.environ.get("CI_CONFIG_PATH")
     CloudInterfaceConfig.set_configs(config_json_path=config_path)
 
     ci = CloudInterface()
@@ -67,8 +67,8 @@ class TestCloudInterface(unittest.TestCase):
         cls.test_folder_path = cls.get_random_service_path()
         # copies local TEST_CI folder to remote storage
 
-        cls.ci.copy_batch(from_path=cls.local_test_folder, to_path=cls.test_folder_path, continue_copy=True,
-                          multiprocess=False)
+        cls.ci.copy_dir(source_dir=cls.local_test_folder, dest_dir=cls.test_folder_path, continue_copy=True,
+                        multiprocess=False)
 
     def setUp(self):
         """Sets up some remote and local file/folder paths"""
@@ -143,7 +143,7 @@ class TestCloudInterface(unittest.TestCase):
         # Tests recursive param
         res1 = self.ci.listdir(path=self.test_folder_path, recursive=True)
         res2 = self.ci.listdir(path=self.test_folder_path, recursive=False)
-        self.assertEqual(len(res1), (len(res2) +1))
+        self.assertEqual(len(res1), (len(res2) + 1))
 
         # Tests exclude folder (can be also recursive=False)
         res1 = self.ci.listdir(path=self.test_folder_path, recursive=True, exclude_folders=False)
@@ -168,7 +168,7 @@ class TestCloudInterface(unittest.TestCase):
         """Tests copy batch and folder remove"""
         new_interface = self.get_random_service_path()
         new_folder_path = os.path.join(new_interface, self.SAMPLE_FOLDER)
-        self.ci.copy_batch(from_path=self.remote_folder_path, to_path=new_folder_path)
+        self.ci.copy_dir(source_dir=self.remote_folder_path, dest_dir=new_folder_path)
 
         self.assertEqual(self.ci.isdir(new_folder_path), True)
 

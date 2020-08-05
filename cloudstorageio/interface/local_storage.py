@@ -10,7 +10,7 @@ import os
 import shutil
 from typing import Optional, Union
 
-from cloudstorageio.tools.collections import add_slash
+from cloudstorageio.tools.ci_collections import add_slash
 from cloudstorageio.tools.logger import logger
 
 
@@ -98,7 +98,8 @@ class LocalStorageInterface:
             return None
 
         if self.isfile(self.path):
-            logger.info('Overwriting {} file'.format(self.path))
+            ...
+            # logger.info('Overwriting {} file'.format(self.path))
 
         if isinstance(content, str):
             content = content.encode('utf8')

@@ -15,7 +15,7 @@ from typing import Tuple, Union, Optional
 from google.cloud import storage
 
 from cloudstorageio.enums.enums import PrefixEnums
-from cloudstorageio.tools.collections import add_slash
+from cloudstorageio.tools.ci_collections import add_slash
 from cloudstorageio.tools.logger import logger
 
 
@@ -209,7 +209,8 @@ class GoogleStorageInterface:
         """
 
         if self._isfile:
-            logger.info('Overwriting {} file'.format(self.path))
+            ...
+            # logger.info('Overwriting {} file'.format(self.path))
         if isinstance(content, str):
             content = content.encode('utf8')
 

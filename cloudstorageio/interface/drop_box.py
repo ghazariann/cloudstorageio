@@ -22,7 +22,7 @@ from cloudstorageio.configs import CloudInterfaceConfig
 from cloudstorageio.enums.enums import PrefixEnums
 from cloudstorageio.exceptions import CaseInsensitivityError
 from cloudstorageio.tools.logger import logger
-from cloudstorageio.tools.collections import add_slash, str2bool
+from cloudstorageio.tools.ci_collections import add_slash, str2bool
 
 
 class DropBoxInterface:
@@ -194,7 +194,7 @@ class DropBoxInterface:
 
         if self._isfile:
             self._write_mode = WriteMode.overwrite
-            logger.info('Overwriting {} file'.format(self.path))
+            # logger.info('Overwriting {} file'.format(self.path))
 
         if isinstance(content, str):
             content = content.encode('utf8')
