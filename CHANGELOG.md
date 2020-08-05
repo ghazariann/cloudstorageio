@@ -22,6 +22,13 @@ All major cloudstorageio changes and pypi releases are listed here
 ## [0.0.9] - 2019-10-18
 - Structure changes (file renames/moves)
 - Implemented scalable unittests
+## [0.0.10] - 2020-07-16
+- Commented Overwriting loggers, 
+- add cognaize logo in Readme
+## [0.1.0] - 2020-08-05
+- Add copy_dir for path to path copy
+- Change copy_batch for list to list copy 
+- Usages in README
 
 # Pypi releases
 See CHANGES references  
@@ -34,3 +41,5 @@ See CHANGES references
 - [0.0.6]
 ### [1.0.9] - 2019-10-24
 - [0.0.9]
+### [1.1.0] - 2020-08-05
+- [0.1.0]
