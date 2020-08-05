@@ -1,5 +1,4 @@
 # cloudstorageio
-_Powered by_  [Cognaize](https://www.cognaize.com/)  ![](/docs/cognaize_logo.png)
 
 Storage agnostic IO interface for humans
 
@@ -69,10 +68,15 @@ ci = CloudInterface()
 # Write text to Google cloud storage file
 with ci.open(google_file_path, 'w') as f:
    f.write("Lorem Ipsum is simply dummy text")
+# OR
+ci.save(google_file_path, "Lorem Ipsum is simply dummy text")
 
 # Read picture from S3 storage
 with ci.open(s3_file_path, 'rb') as f:
     s3_output = f.read()  # binary content of picture
+# OR
+ci.fetch(s3_file_path)
+
 ```
 
 * Remove, list, and check folder/file
@@ -93,8 +97,21 @@ ci.listdir(dropbox_folder_path) # lists folder content
 from cloudstorageio import CloudInterface
 
 dropbox_file_path = 'dbx://bucket-name/path-to-file/sample-pic.jpg'
-google_file_path = 'gs://bucket-name/path-to-file/sample-file.txt'
+gs_file_path = 'gs://bucket-name/path-to-file/sample-file.txt'
 ci = CloudInterface()
 
-ci.copy(from_path=dropbox_file_path, to_path=google_file_path) # copies dropbox file to google
+ci.copy(from_path=dropbox_file_path, to_path=gs_file_path) # copies dropbox file to gs
 ```
+
+* Copy dir
+```python
+from cloudstorageio import CloudInterface
+
+s3_dir = 's3://bucket-name/sample_folder'
+gs_dir = 'gs://bucket-name/sample_folder'
+ci = CloudInterface()
+
+ci.copy_dir(source_dir=s3_dir, dest_dir=gs_dir) # copies s3 folder to gs
+```
+
+_Powered by_ ![](/docs/cognaize_logo.png) [Cognaize](https://www.cognaize.com/) 
