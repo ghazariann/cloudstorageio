@@ -2,7 +2,7 @@
 
 Storage agnostic IO interface for humans
 
-_Developed and tested on python 3.6+
+_Developed and tested on python 3.6+_
 
 [GitHub](https://github.com/VahagnGhaz/cloudstorageio)
 
