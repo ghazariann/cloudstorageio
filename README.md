@@ -2,7 +2,7 @@
 
 Storage agnostic IO interface for humans
 
-_Developed and tested on python 3.7+_/home/vahagn/Downloads/cognaize_logo.png
+_Developed and tested on python 3.6+
 
 [GitHub](https://github.com/VahagnGhaz/cloudstorageio)
 
