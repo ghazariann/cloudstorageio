@@ -115,3 +115,5 @@ venv.bak/
 # generated config file
 /cloudstorageio/configs/resources/credentials.json
 /gdrive_tmp/
+
+temp.py

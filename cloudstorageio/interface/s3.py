@@ -12,9 +12,11 @@
 
 import io
 import os
+import sys
 from typing import Tuple, Optional, Union
 
 import boto3
+from boto3.s3.transfer import TransferConfig
 
 from cloudstorageio.enums.enums import PrefixEnums
 from cloudstorageio.tools.ci_collections import add_slash
@@ -58,6 +60,14 @@ class S3Interface:
         self.path = None
         self._is_open = False
         self.only_bucket = False
+
+        self._multipart_threshold = 100  # in MBs
+
+        self._multipart_config = TransferConfig(
+            multipart_threshold=1024 * self._multipart_threshold,
+            max_concurrency=8,
+            multipart_chunksize=1024 * self._multipart_threshold,
+            use_threads=True)
 
     @property
     def path(self):
@@ -236,7 +246,18 @@ class S3Interface:
                                        '+' not in self._mode):
             raise ValueError(f"Mode '{self._mode}' does not allow writing the file")
 
-        self._object.put(ACL=acl, Body=content, Metadata=metadata)
+        if sys.getsizeof(content) >= 1024 * 1024 * self._multipart_threshold:
+            os.makedirs('/tmp/cloudstorageio', exist_ok=True)
+            with open('/tmp/cloudstorageio/content', 'wb+') as file:
+                file.write(content)
+            del content  # for clearing memory from large files
+            self._object.upload_file(
+                '/tmp/cloudstorageio/content',
+                ExtraArgs={'ACL': acl},
+                Config=self._multipart_config)
+            os.remove('/tmp/cloudstorageio/content')
+        else:
+            self._object.put(ACL=acl, Body=content, Metadata=metadata)
 
     def _parse_bucket(self, path: str) -> Tuple[str, str]:
         """Given a path, return the bucket name and the file path as a tuple"""
