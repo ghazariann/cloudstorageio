@@ -201,6 +201,7 @@ class CloudInterface:
 
     def copy(self, from_path: str, to_path: str):
         """Copies given file to new destination"""
+        # calling the upload method with multipart configs if a local file is copied to S3
         if self.is_local_path(from_path) and self.is_s3_path(to_path):
             self.identify_path_type(to_path)  # setting up s3 storage
             with self.open(to_path, 'wb') as f:

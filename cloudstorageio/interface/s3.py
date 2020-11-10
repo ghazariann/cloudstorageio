@@ -249,7 +249,8 @@ class S3Interface:
     def upload(self, path,
                acl: Optional[str] = 'private'):
         """
-        Used for uploading files from local to S3
+        Used for uploading files from local to S3.
+        Using self._multipart_config for configuring multipart upload
         """
         self._object.upload_file(
             path,
