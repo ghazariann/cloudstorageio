@@ -63,8 +63,6 @@ class CloudInterface:
         self._current_storage = None
         self._path = None
 
-        self._from_local = False  # True if copying from local
-
     def identify_path_type(self, path: str):
         """Identifies "type" of given path and create class instance
         :param path: full path of file/folder
