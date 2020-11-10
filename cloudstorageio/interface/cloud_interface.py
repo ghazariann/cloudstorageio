@@ -14,7 +14,6 @@ import os
 from multiprocessing.pool import Pool
 from typing import Optional, Callable
 
-from cloudstorageio.configs import CloudInterfaceConfig
 from cloudstorageio.enums import PrefixEnums
 from cloudstorageio.interface import GoogleStorageInterface
 from cloudstorageio.interface import LocalStorageInterface
@@ -63,6 +62,8 @@ class CloudInterface:
         self._dr = None
         self._current_storage = None
         self._path = None
+
+        self._from_local = False  # True if copying from local
 
     def identify_path_type(self, path: str):
         """Identifies "type" of given path and create class instance
@@ -202,6 +203,11 @@ class CloudInterface:
 
     def copy(self, from_path: str, to_path: str):
         """Copies given file to new destination"""
+        if self.is_local_path(from_path) and self.is_s3_path(to_path):
+            self.identify_path_type(to_path)  # setting up s3 storage
+            with self.open(to_path, 'wb') as f:
+                f.upload(from_path)
+                return
 
         content = self.fetch(path=from_path)
         self.save(path=to_path, content=content)
