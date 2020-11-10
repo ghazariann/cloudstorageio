@@ -15,10 +15,10 @@ import os
 from typing import Tuple, Optional, Union
 
 import boto3
+from boto3.s3.transfer import TransferConfig
 
 from cloudstorageio.enums.enums import PrefixEnums
 from cloudstorageio.tools.ci_collections import add_slash
-from cloudstorageio.tools.logger import logger
 
 
 class S3Interface:
@@ -58,6 +58,14 @@ class S3Interface:
         self.path = None
         self._is_open = False
         self.only_bucket = False
+
+        self._multipart_threshold = 100  # in MBs
+
+        self._multipart_config = TransferConfig(
+            multipart_threshold=1024 * self._multipart_threshold,
+            max_concurrency=8,
+            multipart_chunksize=1024 * self._multipart_threshold,
+            use_threads=True)
 
     @property
     def path(self):
@@ -237,6 +245,17 @@ class S3Interface:
             raise ValueError(f"Mode '{self._mode}' does not allow writing the file")
 
         self._object.put(ACL=acl, Body=content, Metadata=metadata)
+
+    def upload(self, path,
+               acl: Optional[str] = 'private'):
+        """
+        Used for uploading files from local to S3.
+        Using self._multipart_config for configuring multipart upload
+        """
+        self._object.upload_file(
+            path,
+            ExtraArgs={'ACL': acl},
+            Config=self._multipart_config)
 
     def _parse_bucket(self, path: str) -> Tuple[str, str]:
         """Given a path, return the bucket name and the file path as a tuple"""
