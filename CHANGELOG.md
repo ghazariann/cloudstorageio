@@ -29,7 +29,9 @@ All major cloudstorageio changes and pypi releases are listed here
 - Add copy_dir for path to path copy
 - Change copy_batch for list to list copy 
 - Usages in README
-## [0.1.1] - 2020-11-10
+## [0.1.1] - 2020-08-14
+- README changes
+## [0.1.2] - 2020-11-10
 - Using multipart upload when copying from local to S3
 
 
@@ -46,3 +48,7 @@ See CHANGES references
 - [0.0.9]
 ### [1.1.0] - 2020-08-05
 - [0.1.0]
+### [1.1.1] - 2020-08-14
+- [0.1.1]
+### [1.1.2] - 2020-11-10
+- [0.1.2]
